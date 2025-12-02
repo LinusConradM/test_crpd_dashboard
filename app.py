@@ -19,7 +19,7 @@ from collections import Counter
 # Page Configuration
 # -------------------------
 st.set_page_config(
-    page_title="CRPD Disabililty Rights Data Dashboard",
+    page_title="CRPD Disability Rights Data Dashboard",
     page_icon="🌍",
     layout="wide",
 )
@@ -167,7 +167,7 @@ def model_shift_table(df):
 # -------------------------
 # Load Data
 # -------------------------
-DATA_PATH = "CRPD_dashboard_ready.csv"
+DATA_PATH = "data/crpd_reports.csv"
 df_all = load_data(DATA_PATH)
 ARTICLE_PRESETS = load_article_dict()
 
@@ -250,11 +250,11 @@ if len(mt_global):
             by_year_global,
             x="year",
             y=["medical","rights"],
-            title="Global Shift in Disability Framing (Medical vs. Rights-Based Language)"
+            title="Global Shift in Disability Framing (Medical Model vs. Rights-Based Language)"
         ),
         use_container_width=True,
     )
-    st.caption("⚖️ This area chart shows how the use of medical vs. rights-based language has evolved globally over time.")
+    st.caption("⚖️ This area chart shows how the use of medical model vs. rights-based language has evolved globally over time.")
 
 # === CRPD ARTICLES ===
 with tab_articles:
@@ -362,7 +362,7 @@ st.markdown("---")
 st.markdown(
     """
     <div style='text-align: center; color: #888; font-size: 0.9em;'>
-        Dashboard developed by the <b>Institute on Disability and Public Policy (IDPP)</b> research team.<br>
+        Dashboard developed by Dr. Derrick Cogburn and the <b>Institute on Disability and Public Policy (IDPP)</b> research team.<br>
         © 2025 American University
     </div>
     """,
