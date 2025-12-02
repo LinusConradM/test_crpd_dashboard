@@ -49,7 +49,8 @@ See [docs/development_guide.md](docs/development_guide.md) for contribution guid
 - Institute on Disability and Public Policy (IDPP)
 
 ## License
-[Your license here]
+This work is licensed under a [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/).
+
 
 ## Citation
 Cogburn, D. et al (2025). CRPD Disability Rights Data Dashboard. Institute on Disability and Public Policy, American University. https://idpp.connect.posit.cloud/crpd-dashboard
