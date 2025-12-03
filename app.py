@@ -229,9 +229,10 @@ st.title("🌍 CRPD Disability Rights Data Dashboard")
 
 # Tagline
 st.markdown("""
-<div style='margin: 1rem 0 1.5rem 0; padding: 1.5rem; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); 
+<div style='margin: 1rem 0 1.5rem 0; padding: 1.5rem; 
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%); 
             border-left: 4px solid #667eea; border-radius: 6px;'>
-    <p style='font-size: 1.3rem; font-weight: 500; color: #e0e0e0; margin: 0; line-height: 1.5;'>
+    <p style='font-size: 1.3rem; font-weight: 500; margin: 0; line-height: 1.5;'>
         <strong>The first comprehensive interactive platform</strong> tracking CRPD implementation 
         across 143 countries through <strong>five document types spanning the complete UN reporting cycle</strong> 
         from 2010–2025 — mapping how nations translate disability rights into policy, practice, and progress.
@@ -466,7 +467,7 @@ with tab_about:
     into the real-world implementation of disability rights.
     """)
     
-    # METHODOLOGY SECTION
+  # METHODOLOGY SECTION
     st.subheader("Methodology")
     st.write("""
     The dashboard employs natural language processing (NLP) and text analysis techniques 
@@ -477,10 +478,10 @@ with tab_about:
     
     with col1:
         st.markdown("""
-        <div style='background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; 
+        <div style='background: rgba(102, 126, 234, 0.15); padding: 20px; border-radius: 8px; 
                     border-left: 4px solid #667eea; margin-bottom: 20px;'>
             <h4 style='color: #667eea; margin-top: 0;'>📊 Text Analysis</h4>
-            <ul style='color: #e0e0e0; line-height: 1.8;'>
+            <ul style='line-height: 1.8;'>
                 <li><strong>TF-IDF Analysis:</strong> Identifies distinctive terminology unique to different document types</li>
                 <li><strong>Keyword Frequency:</strong> Tracks recurring themes and concepts across the corpus</li>
                 <li><strong>Article Mapping:</strong> Uses curated keyword dictionaries to identify CRPD article mentions</li>
@@ -489,10 +490,10 @@ with tab_about:
         """, unsafe_allow_html=True)
         
         st.markdown("""
-        <div style='background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; 
+        <div style='background: rgba(102, 126, 234, 0.15); padding: 20px; border-radius: 8px; 
                     border-left: 4px solid #667eea;'>
             <h4 style='color: #667eea; margin-top: 0;'>🔄 Model Shift Analysis</h4>
-            <ul style='color: #e0e0e0; line-height: 1.8;'>
+            <ul style='line-height: 1.8;'>
                 <li>Tracks evolution from medical model to rights-based model language</li>
                 <li>Analyzes temporal and regional variations in disability framing</li>
                 <li>Identifies patterns in how different actors (States vs. Committee) emphasize rights</li>
@@ -502,10 +503,10 @@ with tab_about:
     
     with col2:
         st.markdown("""
-        <div style='background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; 
+        <div style='background: rgba(102, 126, 234, 0.15); padding: 20px; border-radius: 8px; 
                     border-left: 4px solid #667eea; margin-bottom: 20px;'>
             <h4 style='color: #667eea; margin-top: 0;'>🌍 Comparative Analysis</h4>
-            <ul style='color: #e0e0e0; line-height: 1.8;'>
+            <ul style='line-height: 1.8;'>
                 <li>Cross-country reporting patterns and implementation trajectories</li>
                 <li>State Report vs. Concluding Observation emphasis and dialogue dynamics</li>
                 <li>Regional and temporal trends in disability rights discourse</li>
@@ -514,16 +515,16 @@ with tab_about:
         </div>
         """, unsafe_allow_html=True)
     
-    # KEY FEATURES SECTION
+# KEY FEATURES SECTION
     st.subheader("Key Features")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
-        <div style='background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; 
+        <div style='background: rgba(102, 126, 234, 0.15); padding: 20px; border-radius: 8px; 
                     border-left: 4px solid #667eea;'>
-            <p style='color: #e0e0e0; line-height: 1.8; margin: 0;'>
+            <p style='line-height: 1.8; margin: 0;'>
                 🌍 <strong>Interactive Choropleth Map:</strong> Visualize reporting patterns across 143 countries<br><br>
                 📊 <strong>Multi-dimensional Analysis:</strong> Explore by CRPD articles, keywords, topics, and document types<br><br>
                 🔍 <strong>Advanced Filtering:</strong> Filter by country, region, year, and document type
@@ -533,9 +534,9 @@ with tab_about:
     
     with col2:
         st.markdown("""
-        <div style='background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; 
+        <div style='background: rgba(102, 126, 234, 0.15); padding: 20px; border-radius: 8px; 
                     border-left: 4px solid #667eea;'>
-            <p style='color: #e0e0e0; line-height: 1.8; margin: 0;'>
+            <p style='line-height: 1.8; margin: 0;'>
                 📥 <strong>Data Export:</strong> Download filtered datasets with optional text snippets for further analysis<br><br>
                 🏛️ <strong>Country Profiles:</strong> Deep-dive views showing complete reporting history and document evolution
             </p>
