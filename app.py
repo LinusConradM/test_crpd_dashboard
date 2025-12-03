@@ -224,8 +224,21 @@ df = filter_df(df_all, region, country, doc_types, year_range)
 # -------------------------
 # Header & KPIs
 # -------------------------
+
 st.title("🌍 CRPD Disability Rights Data Dashboard")
-st.caption("Explore how countries implement the UN Convention on the Rights of Persons with Disabilities (CRPD).")
+
+# Tagline
+st.markdown("""
+<div style='margin: 1rem 0 1.5rem 0; padding: 1.5rem; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); 
+            border-left: 4px solid #667eea; border-radius: 6px;'>
+    <p style='font-size: 1.3rem; font-weight: 500; color: #e0e0e0; margin: 0; line-height: 1.5;'>
+        <strong>The first comprehensive interactive platform</strong> tracking CRPD implementation 
+        across 143 countries and 506 documents from 2010–2025 — mapping how nations translate 
+        disability rights into policy, practice, and progress.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+st.caption("Brought to you by the Institute on Disability and Public Policy (IDPP) at American University.")
 
 col1, col2, col3, col4 = st.columns(4)
 
