@@ -598,7 +598,7 @@ with tab_about:
         Cogburn, D., et al (2025). *CRPD Disability Rights Data Dashboard*.  
         Institute on Disability and Public Policy, American University.
 
-        Related Publications:
+        Related Publication:
         Uncovering policy priorities for disability inclusion: NLP and LLM approaches to analyzing CRPD State reports, Data & Policy, Cambridge University Press. DOI: https://doi.org/10.1017/dap.2025.10017
         """)
     
