@@ -233,22 +233,28 @@ st.markdown("""
             border-left: 4px solid #667eea; border-radius: 6px;'>
     <p style='font-size: 1.3rem; font-weight: 500; color: #e0e0e0; margin: 0; line-height: 1.5;'>
         <strong>The first comprehensive interactive platform</strong> tracking CRPD implementation 
-        across 143 countries and 506 documents from 2010–2025 — mapping how nations translate 
-        disability rights into policy, practice, and progress.
+        across 143 countries through <strong>five document types spanning the complete UN reporting cycle</strong> 
+        from 2010–2025 — mapping how nations translate disability rights into policy, practice, and progress.
     </p>
 </div>
 """, unsafe_allow_html=True)
+
 st.caption("Brought to you by the Institute on Disability and Public Policy (IDPP) at American University.")
 
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.markdown(f"""
-    <div style='text-align: center; padding: 25px 20px; background: white; 
-                border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
-        <div style='font-size: 40px; margin-bottom: 8px; opacity: 0.8;'>📄</div>
-        <h2 style='color: #1f1f1f; margin: 8px 0; font-size: 2.5rem; font-weight: 700;'>{len(df):,}</h2>
-        <p style='color: #666; margin: 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;'>Documents</p>
+    <div style='background: white; padding: 25px; border-radius: 8px; 
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;'>
+        <div style='font-size: 40px; margin-bottom: 10px;'>📄</div>
+        <div style='font-size: 2.5rem; font-weight: bold; color: #1f1f1f; margin: 10px 0;'>{len(df)}</div>
+        <div style='font-size: 0.9rem; color: #666; text-transform: uppercase; letter-spacing: 1px;'>
+            DOCUMENTS<br>
+            <span style='font-size: 0.75rem; font-weight: normal; text-transform: none; letter-spacing: 0;'>
+                across 5 document types
+            </span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -419,81 +425,106 @@ with tab_country:
         st.info("Select a country to view its profile.")
 
 # === ABOUT ===
+# === ABOUT ===
 with tab_about:
-    st.header("About This Dashboard")
+    st.header("About the CRPD Dashboard")
     
-    col1, col2 = st.columns([2, 1])
+    st.subheader("Project Overview")
+    st.write("""
+    This dashboard provides comprehensive analysis of CRPD (Convention on the Rights of 
+    Persons with Disabilities) implementation across 143 countries, spanning 2010-2025 
+    with 506 documents analyzed.
+    """)
     
-    with col1:
-        st.markdown("""
-        ### Project Overview
-        This dashboard was developed by the Institute on Disability and Public Policy (IDPP) at American University. It analyzes implementation of the **UN Convention on the Rights of Persons with Disabilities (CRPD)** across 143 countries from 2010-2025. It provides researchers, 
-        policymakers, and disability rights advocates with interactive tools to explore reporting 
-        patterns, compliance trends, and thematic emphases.
-        
-        ### Data Sources
-        - **Source**: UN Treaty Body Database
-        - **Documents**: 506 reports across multiple document types
-        - **Document Types**: State Reports, List of Issues, Concluding Observations, Replies, Written Responses
-        - **Countries**: 143 State Parties to the CRPD
-        - **Regions**: 6 global regions
-        - **Time Period**: 2010-2025
-        
-        ### Methodology
-        The dashboard employs natural language processing (NLP) and text analysis techniques:
-        
-        **Text Analysis:**
-        - **TF-IDF Analysis**: Identifies distinctive terminology unique to different document types
-        - **Keyword Frequency**: Tracks recurring themes and concepts across the corpus
-        - **Article Mapping**: Uses curated keyword dictionaries to identify CRPD article mentions
-        
-        **Model Shift Analysis:**
-        - Tracks evolution from medical model to rights-based model language
-        - Analyzes temporal and regional variations in disability framing
-        - Identifies patterns in how different actors (States vs. Committee) emphasize rights
-        
-        **Comparative Analysis:**
-        - Cross-country reporting patterns
-        - State Report vs. Concluding Observation emphasis
-        - Regional and temporal trends
-        """)
+    st.subheader("Data Sources")
+    st.write("""
+    All documents are sourced from the UN Treaty Body Database and represent official 
+    communications between State Parties and the Committee on the Rights of Persons 
+    with Disabilities.
+    """)
     
-    with col2:
-        st.markdown("""
-        ### Key Features
+    st.subheader("The UN CRPD Reporting Cycle")
+    st.write("""
+    This dashboard captures the **complete dialogue** between State Parties and the 
+    independent Committee on the Rights of Persons with Disabilities (sitting at the 
+    UN Office of the High Commissioner for Human Rights in Geneva). Our analysis includes 
+    **five document types** across the full reporting cycle:
+    """)
+    
+    st.markdown("""
+    <div style='background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;'>
+        <ol style='margin: 0; padding-left: 20px; line-height: 2;'>
+            <li><strong>State Party Reports</strong> — Countries' self-assessment of CRPD implementation</li>
+            <li><strong>List of Issues</strong> — Committee's questions and concerns about the report</li>
+            <li><strong>Written Responses</strong> — State Parties' replies to the Committee's questions</li>
+            <li><strong>Concluding Observations</strong> — Committee's final assessment and recommendations</li>
+            <li><strong>Responses to Concluding Observations</strong> — State Parties' follow-up actions</li>
+        </ol>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.info("""
+    💡 **Why this matters:** By analyzing documents across the entire reporting cycle, 
+    we can track not just what countries claim, but how the Committee responds, what 
+    questions they raise, and how nations follow through — providing unprecedented insight 
+    into the real-world implementation of disability rights.
+    """)
+    
+    # METHODOLOGY SECTION - FIXED INDENTATION
+    st.subheader("Methodology")
+    st.write("""
+    The dashboard employs natural language processing (NLP) and text analysis techniques 
+    to analyze patterns across the complete UN CRPD reporting cycle.
+    """)
+    
+    st.markdown("""
+    <div style='background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;'>
+        <h4 style='margin-top: 0; color: #667eea;'>📊 Text Analysis</h4>
+        <ul style='line-height: 1.8;'>
+            <li><strong>TF-IDF Analysis:</strong> Identifies distinctive terminology unique to different document types</li>
+            <li><strong>Keyword Frequency:</strong> Tracks recurring themes and concepts across the corpus</li>
+            <li><strong>Article Mapping:</strong> Uses curated keyword dictionaries to identify CRPD article mentions</li>
+        </ul>
         
-        🌍 **Interactive Map**
-        Visualize global CRPD reporting patterns
+        <h4 style='color: #667eea;'>🔄 Model Shift Analysis</h4>
+        <ul style='line-height: 1.8;'>
+            <li>Tracks evolution from medical model to rights-based model language</li>
+            <li>Analyzes temporal and regional variations in disability framing</li>
+            <li>Identifies patterns in how different actors (States vs. Committee) emphasize rights</li>
+        </ul>
         
-        📊 **Multi-Dimensional Analysis**
-        - Article frequency
-        - Keyword trends
-        - Model language shifts
-        
-        🔍 **Advanced Filtering**
-        Filter by region, country, document type, and time period
-        
-        📥 **Data Export**
-        Download filtered datasets for further analysis
-        
-        🏛️ **Country Profiles**
-        Deep-dive into individual country reporting histories
-        """)
-        
-        st.markdown("---")
-        
-        st.markdown("""
-        ### Technical Stack
-        - **Framework**: Streamlit + Python
-        - **Visualization**: Plotly Express
-        - **NLP**: scikit-learn (TF-IDF)
-        - **Data Processing**: Pandas, NumPy
-        - **Deployment**: Posit Connect Cloud
-        """)
+        <h4 style='color: #667eea;'>🌍 Comparative Analysis</h4>
+        <ul style='line-height: 1.8;'>
+            <li>Cross-country reporting patterns and implementation trajectories</li>
+            <li>State Report vs. Concluding Observation emphasis and dialogue dynamics</li>
+            <li>Regional and temporal trends in disability rights discourse</li>
+            <li>Document type variations across the five-stage reporting cycle</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.subheader("Key Features")
+    st.write("""
+    - **Interactive Choropleth Map**: Visualize reporting patterns across 143 countries
+    - **Multi-dimensional Analysis**: Explore by CRPD articles, keywords, topics, and document types
+    - **Advanced Filtering**: Filter by country, region, year, and document type
+    - **Data Export**: Download filtered datasets with optional text snippets for further analysis
+    - **Country Profiles**: Deep-dive views showing complete reporting history and document evolution
+    """)
     
     st.markdown("---")
     
-    # Team Section
+    st.subheader("Technical Stack")
+    st.markdown("""
+    - **Framework**: Streamlit + Python
+    - **Visualization**: Plotly Express
+    - **NLP**: scikit-learn (TF-IDF)
+    - **Data Processing**: Pandas, NumPy
+    - **Deployment**: Posit Connect Cloud
+    """)
+    
+    st.markdown("---")
+    
     st.subheader("Research Team")
     
     col1, col2 = st.columns(2)
@@ -501,19 +532,19 @@ with tab_about:
     with col1:
         st.markdown("""
         **Principal Investigator**  
-        Dr. Derrick L. Cogburn
-        Professor of Environment, Development & Health
+        Dr. Derrick L. Cogburn  
+        Professor of Environment, Development & Health  
         Professor of Information Technology & Analytics  
         Executive Director, Institute on Disability and Public Policy (IDPP)  
         American University  
         School of International Service
         
-        **Collaboratory and Co-Investigator**
+        **Collaboratory and Co-Investigator**  
         Dr. Keiko Shikako, McGill University
 
-        **Team Members**
-        Ms. Juliana Woods, American University
-        Ms. Rachi Adhikari, American University
+        **Team Members**  
+        Ms. Juliana Woods, American University  
+        Ms. Rachi Adhikari, American University  
         Mr. Theodore Andrew Ochieng, American University
 
         **Organization**  
