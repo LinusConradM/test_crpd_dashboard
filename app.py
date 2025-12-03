@@ -33,6 +33,35 @@ HIDE_SIDEBAR_STYLE = """
 """
 st.markdown(HIDE_SIDEBAR_STYLE, unsafe_allow_html=True)
 
+# Custom CSS for better readability
+CUSTOM_STYLE = """
+    <style>
+        /* Increase subtitle/caption text */
+        .stApp p {
+            font-size: 1.1rem;
+        }
+        
+        /* Increase tab text size */
+        .stTabs [data-baseweb="tab-list"] button {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        /* Make main descriptive text larger */
+        .element-container div[data-testid="stMarkdownContainer"] > p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        /* Section headers in About tab */
+        h3 {
+            font-size: 1.5rem;
+            margin-top: 1.5rem;
+        }
+    </style>
+"""
+st.markdown(CUSTOM_STYLE, unsafe_allow_html=True)
+
 # -------------------------
 # Load Data & Dictionaries
 # -------------------------
@@ -196,7 +225,7 @@ df = filter_df(df_all, region, country, doc_types, year_range)
 # Header & KPIs
 # -------------------------
 st.title("🌍 CRPD Disability Rights Data Dashboard")
-st.caption("Explore how countries implement the UN Convention on the Rights of Persons with Disabilities (CRPD) across all report types.")
+st.caption("Explore how countries implement the UN Convention on the Rights of Persons with Disabilities (CRPD).")
 
 k1, k2, k3, k4 = st.columns(4)
 k1.metric("Documents", f"{len(df):,}")
@@ -210,8 +239,8 @@ else:
 # -------------------------
 # Tabs
 # -------------------------
-tab_overview, tab_articles, tab_keywords, tab_compare, tab_country = st.tabs(
-    ["Overview", "CRPD Articles", "Keywords & Topics", "Comparative", "Country Explorer"]
+tab_overview, tab_articles, tab_keywords, tab_compare, tab_country, tab_about = st.tabs(
+    ["Overview", "CRPD Articles", "Keywords & Topics", "Comparative", "Country Explorer", "About"]
 )
 
 # === OVERVIEW ===
@@ -338,6 +367,129 @@ with tab_country:
         st.dataframe(sub.sort_values("year", ascending=False)[["year","doc_type","text_snippet"]].head(10), use_container_width=True)
     else:
         st.info("Select a country to view its profile.")
+
+# === ABOUT ===
+with tab_about:
+    st.header("About This Dashboard")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown("""
+        ### Project Overview
+        This dashboard was developed by the Institute on Disability and Public Policy (IDPP) at American University. It analyzes implementation of the **UN Convention on the Rights of Persons with Disabilities (CRPD)** across 143 countries from 2010-2025. It provides researchers, 
+        policymakers, and disability rights advocates with interactive tools to explore reporting 
+        patterns, compliance trends, and thematic emphases.
+        
+        ### Data Sources
+        - **Source**: UN Treaty Body Database
+        - **Documents**: 506 reports across multiple document types
+        - **Document Types**: State Reports, List of Issues, Concluding Observations, Replies, Written Responses
+        - **Countries**: 143 State Parties to the CRPD
+        - **Regions**: 6 global regions
+        - **Time Period**: 2010-2025
+        
+        ### Methodology
+        The dashboard employs natural language processing (NLP) and text analysis techniques:
+        
+        **Text Analysis:**
+        - **TF-IDF Analysis**: Identifies distinctive terminology unique to different document types
+        - **Keyword Frequency**: Tracks recurring themes and concepts across the corpus
+        - **Article Mapping**: Uses curated keyword dictionaries to identify CRPD article mentions
+        
+        **Model Shift Analysis:**
+        - Tracks evolution from medical model to rights-based model language
+        - Analyzes temporal and regional variations in disability framing
+        - Identifies patterns in how different actors (States vs. Committee) emphasize rights
+        
+        **Comparative Analysis:**
+        - Cross-country reporting patterns
+        - State Report vs. Concluding Observation emphasis
+        - Regional and temporal trends
+        """)
+    
+    with col2:
+        st.markdown("""
+        ### Key Features
+        
+        🌍 **Interactive Map**
+        Visualize global CRPD reporting patterns
+        
+        📊 **Multi-Dimensional Analysis**
+        - Article frequency
+        - Keyword trends
+        - Model language shifts
+        
+        🔍 **Advanced Filtering**
+        Filter by region, country, document type, and time period
+        
+        📥 **Data Export**
+        Download filtered datasets for further analysis
+        
+        🏛️ **Country Profiles**
+        Deep-dive into individual country reporting histories
+        """)
+        
+        st.markdown("---")
+        
+        st.markdown("""
+        ### Technical Stack
+        - **Framework**: Streamlit + Python
+        - **Visualization**: Plotly Express
+        - **NLP**: scikit-learn (TF-IDF)
+        - **Data Processing**: Pandas, NumPy
+        - **Deployment**: Posit Connect Cloud
+        """)
+    
+    st.markdown("---")
+    
+    # Team Section
+    st.subheader("Research Team")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        **Principal Investigator**  
+        Dr. Derrick L. Cogburn
+        Professor of Environment, Development & Health
+        Professor of Information Technology & Analytics  
+        Executive Director, Institute on Disability and Public Policy (IDPP)  
+        American University  
+        School of International Service
+        
+        **Collaboratory and Co-Investigator**
+        Dr. Keiko Shikako, McGill University
+
+        **Team Members**
+        Ms. Juliana Woods, American University
+        Ms. Rachi Adhikari, American University
+        Mr. Theodore Andrew Ochieng, American University
+
+        **Organization**  
+        Institute on Disability and Public Policy (IDPP)  
+        American University
+        """)
+    
+    with col2:
+        st.markdown("""
+        **Project Information**  
+        Developed: 2024-2025  
+        Version: 1.0  
+        Last Updated: December 2024
+        
+        **Citation**  
+        Cogburn, D., et al (2025). *CRPD Disability Rights Data Dashboard*.  
+        Institute on Disability and Public Policy, American University.
+        """)
+    
+    st.markdown("---")
+    
+    st.info("""
+    💡 **For Questions or Collaboration**: This dashboard is designed to support research, 
+    advocacy, and policy analysis related to disability rights and the CRPD. For inquiries 
+    about the data, methodology, or potential collaborations, please contact IDPP at American University.
+    """)
 
 # -------------------------
 # Export
