@@ -571,7 +571,7 @@ with tab_about:
         American University  
         School of International Service
         
-        **Collaboratory and Co-Investigator**  
+        **Collaborator and Co-Investigator**  
         Dr. Keiko Shikako, McGill University
 
         **Team Members**  
