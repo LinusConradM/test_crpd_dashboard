@@ -300,6 +300,7 @@ tab_overview, tab_articles, tab_keywords, tab_compare, tab_country, tab_about = 
 )
 
 # === OVERVIEW ===
+# === OVERVIEW ===
 with tab_overview:
     st.subheader("Global Overview")
     st.markdown("""
@@ -322,24 +323,24 @@ with tab_overview:
         yearly = df.groupby("year").size().reset_index(name="count").sort_values("year")
         st.plotly_chart(px.line(yearly, x="year", y="count", markers=True), use_container_width=True)
         st.caption("📈 Number of reports submitted each year.")
-
-# === GLOBAL MODEL SHIFT (new)
-mt_global = model_shift_table(df)
-if len(mt_global):
-    by_year_global = (
-        mt_global.groupby("year")[["medical","rights"]]
-        .sum().reset_index().sort_values("year")
-    )
-    st.plotly_chart(
-        px.area(
-            by_year_global,
-            x="year",
-            y=["medical","rights"],
-            title="Global Shift in Disability Framing (Medical Model vs. Rights-Based Language)"
-        ),
-        use_container_width=True,
-    )
-    st.caption("⚖️ This area chart shows how the use of medical model vs. rights-based language has evolved globally over time.")
+    
+    # === GLOBAL MODEL SHIFT ===
+    mt_global = model_shift_table(df)
+    if len(mt_global):
+        by_year_global = (
+            mt_global.groupby("year")[["medical","rights"]]
+            .sum().reset_index().sort_values("year")
+        )
+        st.plotly_chart(
+            px.area(
+                by_year_global,
+                x="year",
+                y=["medical","rights"],
+                title="Global Shift in Disability Framing (Medical Model vs. Rights-Based Model Language)"
+            ),
+            use_container_width=True,
+        )
+        st.caption("⚖️ This area chart shows how the use of medical model vs. rights-based model language has evolved globally over time.")
 
 # === CRPD ARTICLES ===
 with tab_articles:
@@ -425,7 +426,6 @@ with tab_country:
         st.info("Select a country to view its profile.")
 
 # === ABOUT ===
-# === ABOUT ===
 with tab_about:
     st.header("About the CRPD Dashboard")
     
@@ -451,17 +451,14 @@ with tab_about:
     **five document types** across the full reporting cycle:
     """)
     
+    # Simplified list - no heavy HTML
     st.markdown("""
-    <div style='background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;'>
-        <ol style='margin: 0; padding-left: 20px; line-height: 2;'>
-            <li><strong>State Party Reports</strong> — Countries' self-assessment of CRPD implementation</li>
-            <li><strong>List of Issues</strong> — Committee's questions and concerns about the report</li>
-            <li><strong>Written Responses</strong> — State Parties' replies to the Committee's questions</li>
-            <li><strong>Concluding Observations</strong> — Committee's final assessment and recommendations</li>
-            <li><strong>Responses to Concluding Observations</strong> — State Parties' follow-up actions</li>
-        </ol>
-    </div>
-    """, unsafe_allow_html=True)
+    1. **State Party Reports** — Countries' self-assessment of CRPD implementation
+    2. **List of Issues** — Committee's questions and concerns about the report
+    3. **Written Responses** — State Parties' replies to the Committee's questions
+    4. **Concluding Observations** — Committee's final assessment and recommendations
+    5. **Responses to Concluding Observations** — State Parties' follow-up actions
+    """)
     
     st.info("""
     💡 **Why this matters:** By analyzing documents across the entire reporting cycle, 
@@ -470,52 +467,87 @@ with tab_about:
     into the real-world implementation of disability rights.
     """)
     
-    # METHODOLOGY SECTION - FIXED INDENTATION
+    # METHODOLOGY SECTION
     st.subheader("Methodology")
     st.write("""
     The dashboard employs natural language processing (NLP) and text analysis techniques 
     to analyze patterns across the complete UN CRPD reporting cycle.
     """)
     
-    st.markdown("""
-    <div style='background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;'>
-        <h4 style='margin-top: 0; color: #667eea;'>📊 Text Analysis</h4>
-        <ul style='line-height: 1.8;'>
-            <li><strong>TF-IDF Analysis:</strong> Identifies distinctive terminology unique to different document types</li>
-            <li><strong>Keyword Frequency:</strong> Tracks recurring themes and concepts across the corpus</li>
-            <li><strong>Article Mapping:</strong> Uses curated keyword dictionaries to identify CRPD article mentions</li>
-        </ul>
-        
-        <h4 style='color: #667eea;'>🔄 Model Shift Analysis</h4>
-        <ul style='line-height: 1.8;'>
-            <li>Tracks evolution from medical model to rights-based model language</li>
-            <li>Analyzes temporal and regional variations in disability framing</li>
-            <li>Identifies patterns in how different actors (States vs. Committee) emphasize rights</li>
-        </ul>
-        
-        <h4 style='color: #667eea;'>🌍 Comparative Analysis</h4>
-        <ul style='line-height: 1.8;'>
-            <li>Cross-country reporting patterns and implementation trajectories</li>
-            <li>State Report vs. Concluding Observation emphasis and dialogue dynamics</li>
-            <li>Regional and temporal trends in disability rights discourse</li>
-            <li>Document type variations across the five-stage reporting cycle</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
     
+    with col1:
+        st.markdown("""
+        <div style='background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; 
+                    border-left: 4px solid #667eea; margin-bottom: 20px;'>
+            <h4 style='color: #667eea; margin-top: 0;'>📊 Text Analysis</h4>
+            <ul style='color: #e0e0e0; line-height: 1.8;'>
+                <li><strong>TF-IDF Analysis:</strong> Identifies distinctive terminology unique to different document types</li>
+                <li><strong>Keyword Frequency:</strong> Tracks recurring themes and concepts across the corpus</li>
+                <li><strong>Article Mapping:</strong> Uses curated keyword dictionaries to identify CRPD article mentions</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div style='background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; 
+                    border-left: 4px solid #667eea;'>
+            <h4 style='color: #667eea; margin-top: 0;'>🔄 Model Shift Analysis</h4>
+            <ul style='color: #e0e0e0; line-height: 1.8;'>
+                <li>Tracks evolution from medical model to rights-based model language</li>
+                <li>Analyzes temporal and regional variations in disability framing</li>
+                <li>Identifies patterns in how different actors (States vs. Committee) emphasize rights</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div style='background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; 
+                    border-left: 4px solid #667eea; margin-bottom: 20px;'>
+            <h4 style='color: #667eea; margin-top: 0;'>🌍 Comparative Analysis</h4>
+            <ul style='color: #e0e0e0; line-height: 1.8;'>
+                <li>Cross-country reporting patterns and implementation trajectories</li>
+                <li>State Report vs. Concluding Observation emphasis and dialogue dynamics</li>
+                <li>Regional and temporal trends in disability rights discourse</li>
+                <li>Document type variations across the five-stage reporting cycle</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # KEY FEATURES SECTION (FIXED INDENTATION)
     st.subheader("Key Features")
-    st.write("""
-    - **Interactive Choropleth Map**: Visualize reporting patterns across 143 countries
-    - **Multi-dimensional Analysis**: Explore by CRPD articles, keywords, topics, and document types
-    - **Advanced Filtering**: Filter by country, region, year, and document type
-    - **Data Export**: Download filtered datasets with optional text snippets for further analysis
-    - **Country Profiles**: Deep-dive views showing complete reporting history and document evolution
-    """)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div style='background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; 
+                    border-left: 4px solid #667eea;'>
+            <p style='color: #e0e0e0; line-height: 1.8; margin: 0;'>
+                🌍 <strong>Interactive Choropleth Map:</strong> Visualize reporting patterns across 143 countries<br><br>
+                📊 <strong>Multi-dimensional Analysis:</strong> Explore by CRPD articles, keywords, topics, and document types<br><br>
+                🔍 <strong>Advanced Filtering:</strong> Filter by country, region, year, and document type
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div style='background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px; 
+                    border-left: 4px solid #667eea;'>
+            <p style='color: #e0e0e0; line-height: 1.8; margin: 0;'>
+                📥 <strong>Data Export:</strong> Download filtered datasets with optional text snippets for further analysis<br><br>
+                🏛️ <strong>Country Profiles:</strong> Deep-dive views showing complete reporting history and document evolution
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
     
     st.markdown("---")
     
+    # TECHNICAL STACK SECTION (FIXED INDENTATION)
     st.subheader("Technical Stack")
-    st.markdown("""
+    st.write("""
     - **Framework**: Streamlit + Python
     - **Visualization**: Plotly Express
     - **NLP**: scikit-learn (TF-IDF)
@@ -525,6 +557,7 @@ with tab_about:
     
     st.markdown("---")
     
+    # RESEARCH TEAM SECTION (ALREADY CORRECT)
     st.subheader("Research Team")
     
     col1, col2 = st.columns(2)
