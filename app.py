@@ -300,7 +300,6 @@ tab_overview, tab_articles, tab_keywords, tab_compare, tab_country, tab_about = 
 )
 
 # === OVERVIEW ===
-# === OVERVIEW ===
 with tab_overview:
     st.subheader("Global Overview")
     st.markdown("""
@@ -451,7 +450,7 @@ with tab_about:
     **five document types** across the full reporting cycle:
     """)
     
-    # Simplified list - no heavy HTML
+    # Simplified list
     st.markdown("""
     1. **State Party Reports** — Countries' self-assessment of CRPD implementation
     2. **List of Issues** — Committee's questions and concerns about the report
@@ -515,7 +514,7 @@ with tab_about:
         </div>
         """, unsafe_allow_html=True)
     
-    # KEY FEATURES SECTION (FIXED INDENTATION)
+    # KEY FEATURES SECTION
     st.subheader("Key Features")
     
     col1, col2 = st.columns(2)
@@ -545,7 +544,7 @@ with tab_about:
     
     st.markdown("---")
     
-    # TECHNICAL STACK SECTION (FIXED INDENTATION)
+    # TECHNICAL STACK SECTION
     st.subheader("Technical Stack")
     st.write("""
     - **Framework**: Streamlit + Python
@@ -557,7 +556,7 @@ with tab_about:
     
     st.markdown("---")
     
-    # RESEARCH TEAM SECTION (ALREADY CORRECT)
+    # RESEARCH TEAM SECTION
     st.subheader("Research Team")
     
     col1, col2 = st.columns(2)
