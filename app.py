@@ -227,14 +227,51 @@ df = filter_df(df_all, region, country, doc_types, year_range)
 st.title("🌍 CRPD Disability Rights Data Dashboard")
 st.caption("Explore how countries implement the UN Convention on the Rights of Persons with Disabilities (CRPD).")
 
-k1, k2, k3, k4 = st.columns(4)
-k1.metric("Documents", f"{len(df):,}")
-k2.metric("Countries", f"{df['country'].nunique():,}")
-k3.metric("Regions", f"{df['region'].nunique():,}")
-if "year" in df.columns and len(df):
-    k4.metric("Years", f"{int(df['year'].min())}–{int(df['year'].max())}")
-else:
-    k4.metric("Years", "—")
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.markdown(f"""
+    <div style='text-align: center; padding: 25px 20px; background: white; 
+                border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+        <div style='font-size: 40px; margin-bottom: 8px; opacity: 0.8;'>📄</div>
+        <h2 style='color: #1f1f1f; margin: 8px 0; font-size: 2.5rem; font-weight: 700;'>{len(df):,}</h2>
+        <p style='color: #666; margin: 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;'>Documents</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col2:
+    st.markdown(f"""
+    <div style='text-align: center; padding: 25px 20px; background: white; 
+                border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+        <div style='font-size: 40px; margin-bottom: 8px; opacity: 0.8;'>🌍</div>
+        <h2 style='color: #1f1f1f; margin: 8px 0; font-size: 2.5rem; font-weight: 700;'>{df['country'].nunique():,}</h2>
+        <p style='color: #666; margin: 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;'>Countries</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown(f"""
+    <div style='text-align: center; padding: 25px 20px; background: white; 
+                border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+        <div style='font-size: 40px; margin-bottom: 8px; opacity: 0.8;'>🗺️</div>
+        <h2 style='color: #1f1f1f; margin: 8px 0; font-size: 2.5rem; font-weight: 700;'>{df['region'].nunique():,}</h2>
+        <p style='color: #666; margin: 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;'>Regions</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col4:
+    if "year" in df.columns and len(df):
+        years_display = f"{int(df['year'].min())}–{int(df['year'].max())}"
+    else:
+        years_display = "—"
+    st.markdown(f"""
+    <div style='text-align: center; padding: 25px 20px; background: white; 
+                border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>
+        <div style='font-size: 40px; margin-bottom: 8px; opacity: 0.8;'>📅</div>
+        <h2 style='color: #1f1f1f; margin: 8px 0; font-size: 2.5rem; font-weight: 700;'>{years_display}</h2>
+        <p style='color: #666; margin: 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px;'>Years</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # -------------------------
 # Tabs
