@@ -577,10 +577,10 @@ with tab_about:
 
         **Research Team Members**  
         Ms. Juliana Woods, American University  
-        Ms. Rachi Adhikari, American University
-        Ms. Anja Herman, American University
-        Mr. Theodore Andrew Ochieng, American University
-        Ms. Mina Aydin, University of Virginia
+        Ms. Rachi Adhikari, American University  
+        Ms. Anja Herman, American University  
+        Mr. Theodore Andrew Ochieng, American University  
+        Ms. Mina Aydin, University of Virginia  
     
 
         **Organization**  
@@ -599,8 +599,8 @@ with tab_about:
         Cogburn, D., et al (2025). *CRPD Disability Rights Data Dashboard*.  
         Institute on Disability and Public Policy, American University.
 
-        Related Publication:
-        Uncovering policy priorities for disability inclusion: NLP and LLM approaches to analyzing CRPD State reports, Data & Policy, Cambridge University Press. DOI: https://doi.org/10.1017/dap.2025.10017
+        Related Open Access Publication:
+        Cogburn, D; Ochieng, T.; Shikako, K.; Woods, J.; and Aydin, M. (2025) Uncovering policy priorities for disability inclusion: NLP and LLM approaches to analyzing CRPD State reports, Data & Policy, Cambridge University Press. DOI: https://doi.org/10.1017/dap.2025.10017
         """)
     
     st.markdown("---")
