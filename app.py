@@ -217,7 +217,7 @@ doc_types = st.sidebar.multiselect("Document Type", doc_types_all, default=doc_t
 ymin, ymax = int(df_all["year"].min()), int(df_all["year"].max())
 year_range = st.sidebar.slider("Year Range", ymin, ymax, (ymin, ymax))
 
-download_toggle = st.sidebar.checkbox("Include text snippets in export", value=False)
+#download_toggle = st.sidebar.checkbox("Include text snippets in export", value=False)
 
 df = filter_df(df_all, region, country, doc_types, year_range)
 
@@ -537,7 +537,7 @@ with tab_about:
         <div style='background: rgba(102, 126, 234, 0.15); padding: 20px; border-radius: 8px; 
                     border-left: 4px solid #667eea;'>
             <p style='line-height: 1.8; margin: 0;'>
-                📥 <strong>Data Export:</strong> Download filtered datasets with optional text snippets for further analysis<br><br>
+                📥 <strong>Data Export:</strong> Download filtered datasets with optional text snippets for further analysis (available soon)<br><br>
                 🏛️ <strong>Country Profiles:</strong> Deep-dive views showing complete reporting history and document evolution
             </p>
         </div>
@@ -612,20 +612,20 @@ with tab_about:
     """)
 
 # -------------------------
-# Export
+# Export (TEMPORARILY DISABLED - Re-enable when we are ready to share data)
 # -------------------------
-st.markdown("---")
-cols_to_export = ["doc_type","country","year","region","subregion","word_count","language","symbol","file_name"]
-if download_toggle:
-    cols_to_export += ["text_snippet"]
-export_df = df[cols_to_export].copy() if len(df) else pd.DataFrame(columns=cols_to_export)
+# st.markdown("---")
+# cols_to_export = ["doc_type","country","year","region","subregion","word_count","language","symbol","file_name"]
+# if download_toggle:
+#     cols_to_export += ["text_snippet"]
+# export_df = df[cols_to_export].copy() if len(df) else pd.DataFrame(columns=cols_to_export)
 
-st.download_button(
-    "⬇️ Download Filtered Data (CSV)",
-    data=export_df.to_csv(index=False).encode("utf-8"),
-    file_name="CRPD_filtered_export.csv",
-    mime="text/csv"
-)
+# st.download_button(
+#     "⬇️ Download Filtered Data (CSV)",
+#     data=export_df.to_csv(index=False).encode("utf-8"),
+#     file_name="CRPD_filtered_export.csv",
+#     mime="text/csv"
+# )
 
 # -------------------------
 # Footer / Attribution
