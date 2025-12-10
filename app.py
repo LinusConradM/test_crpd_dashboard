@@ -951,6 +951,16 @@ with tab_about:
                 <li>Quantitative outcome correlations</li>
             </ul>
         </div>
+<<<<<<< HEAD
+        
+        <div class="info-box" style="margin-top: 20px;">
+            <h4>🔮 Future Enhancements</h4>
+            <ul style="line-height: 1.8;">
+                <li>World Bank Disability Data Hub integration</li>
+                <li>Disability Data Initiative metrics</li>
+                <li>Quantitative outcome correlations</li>
+            </ul>
+=======
         """, unsafe_allow_html=True)
     
     st.markdown("---")
