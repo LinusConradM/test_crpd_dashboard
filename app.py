@@ -355,7 +355,7 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("### 📘 CRPD Article Filter")
 article_list = ["All Articles"] + sorted(list(ARTICLE_PRESETS.keys()))
 selected_articles = st.sidebar.multiselect(
-    "Focus on specific articles",
+    "Focus on all or specific articles",
     article_list,
     default=["All Articles"],
     help="Filter analysis to specific CRPD articles. Leave as 'All Articles' to see everything."
@@ -786,7 +786,7 @@ with tab_analyze:
     # Analysis type selector
     analysis_type = st.radio(
         "Select Analysis Type:",
-        ["CRPD Article Coverage", "Keywords & Topics", "Comparative Analysis", "Model Shift Analysis"],
+        ["CRPD Article Coverage", "Article Deep-Dive", "Keywords & Topics", "Comparative Analysis", "Model Shift Analysis"],
         horizontal=True
     )
     
@@ -868,7 +868,7 @@ with tab_analyze:
             st.info("Need both State Reports and Concluding Observations to compare.")
     
     # Model Shift Analysis
-    else:
+    elif analysis_type == "Model Shift Analysis":
         st.subheader("⚖️ Medical Model vs. Rights-Based Model Analysis")
         
         mt = model_shift_table(df)
@@ -892,6 +892,143 @@ with tab_analyze:
                 st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Not enough data for model shift analysis.")
+
+# Article Deep-Dive Analysis
+    elif analysis_type == "Article Deep-Dive":
+        st.subheader("🔍 Article-Specific Deep-Dive Analysis")
+        st.markdown("""
+        Explore how a specific CRPD article is represented across countries, regions, 
+        document types, and over time.
+        """)
+        
+        # Article selector
+        selected_article = st.selectbox(
+            "Select CRPD Article to analyze:",
+            sorted(list(ARTICLE_PRESETS.keys())),
+            help="Choose an article to see detailed analysis of its coverage"
+        )
+        
+        st.markdown(f"### 📊 Analysis for **{selected_article}**")
+        
+        # Get keywords for this article
+        article_keywords = ARTICLE_PRESETS[selected_article]
+        st.caption(f"**Tracking keywords:** {', '.join(article_keywords[:8])}{'...' if len(article_keywords) > 8 else ''}")
+        
+        # Calculate mentions across filtered data
+        with st.spinner("Analyzing article mentions..."):
+            df['article_mentions'] = df['clean_text'].apply(
+                lambda t: count_phrases(t, article_keywords)
+            )
+        
+        # Filter to only documents that mention this article
+        df_with_article = df[df['article_mentions'] > 0].copy()
+        
+        if len(df_with_article) == 0:
+            st.warning(f"❌ No mentions of **{selected_article}** found in the currently filtered data. Try adjusting your filters in the sidebar.")
+        else:
+            # Key Metrics
+            st.markdown("#### 📈 Key Metrics")
+            col1, col2, col3, col4 = st.columns(4)
+            
+            total_mentions = int(df_with_article['article_mentions'].sum())
+            docs_with_mentions = len(df_with_article)
+            avg_mentions = df_with_article['article_mentions'].mean()
+            pct_docs = (len(df_with_article) / len(df) * 100) if len(df) > 0 else 0
+            
+            col1.metric("Documents Mentioning", f"{docs_with_mentions:,}")
+            col2.metric("Total Mentions", f"{total_mentions:,}")
+            col3.metric("Avg Mentions/Doc", f"{avg_mentions:.1f}")
+            col4.metric("% of Filtered Docs", f"{pct_docs:.1f}%")
+            
+            st.markdown("---")
+            
+            # Geographic Analysis
+            st.markdown("#### 🌍 Geographic Distribution")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                by_region = df_with_article.groupby('region')['article_mentions'].sum().reset_index()
+                by_region = by_region.sort_values('article_mentions', ascending=False)
+                if not by_region.empty:
+                    fig = px.bar(by_region, x='article_mentions', y='region', orientation='h',
+                                title=f"Mentions by Region",
+                                labels={'article_mentions': 'Total Mentions', 'region': 'Region'})
+                    fig.update_layout(yaxis={'categoryorder': 'total ascending'})
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.caption(f"📊 {selected_article.split('—')[0].strip()} is most discussed in {by_region.iloc[0]['region']}")
+            
+            with col2:
+                by_country = df_with_article.groupby('country')['article_mentions'].sum().reset_index()
+                by_country = by_country.nlargest(15, 'article_mentions')
+                if not by_country.empty:
+                    fig = px.bar(by_country, x='article_mentions', y='country', orientation='h',
+                                title=f"Top 15 Countries by Mentions",
+                                labels={'article_mentions': 'Total Mentions', 'country': 'Country'})
+                    fig.update_layout(yaxis={'categoryorder': 'total ascending'})
+                    st.plotly_chart(fig, use_container_width=True)
+                    st.caption(f"🌍 {by_country.iloc[0]['country']} mentions this article most frequently")
+            
+            # Document Type Analysis
+            st.markdown("---")
+            st.markdown("#### 📄 Document Type Analysis")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                by_doctype = df_with_article.groupby('doc_type')['article_mentions'].sum().reset_index()
+                by_doctype = by_doctype.sort_values('article_mentions', ascending=False)
+                if not by_doctype.empty:
+                    fig = px.bar(by_doctype, x='doc_type', y='article_mentions',
+                                title=f"Mentions by Document Type",
+                                labels={'article_mentions': 'Total Mentions', 'doc_type': 'Document Type'})
+                    st.plotly_chart(fig, use_container_width=True)
+            
+            with col2:
+                # Pie chart showing distribution
+                if not by_doctype.empty:
+                    fig = px.pie(by_doctype, values='article_mentions', names='doc_type',
+                                title=f"Distribution Across Document Types")
+                    st.plotly_chart(fig, use_container_width=True)
+            
+            if not by_doctype.empty:
+                top_doctype = by_doctype.iloc[0]
+                st.caption(f"📋 Most mentioned in **{top_doctype['doc_type']}** ({top_doctype['article_mentions']} mentions)")
+            
+            # Temporal Analysis
+            if 'year' in df_with_article.columns and len(df_with_article) > 0:
+                st.markdown("---")
+                st.markdown("#### 📅 Temporal Trends")
+                
+                by_year = df_with_article.groupby('year')['article_mentions'].sum().reset_index().sort_values('year')
+                if not by_year.empty:
+                    fig = px.line(by_year, x='year', y='article_mentions', markers=True,
+                                 title=f"Mentions Over Time",
+                                 labels={'article_mentions': 'Total Mentions', 'year': 'Year'})
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Calculate trend
+                    if len(by_year) >= 2:
+                        first_year_mentions = by_year.iloc[0]['article_mentions']
+                        last_year_mentions = by_year.iloc[-1]['article_mentions']
+                        if first_year_mentions > 0:
+                            pct_change = ((last_year_mentions - first_year_mentions) / first_year_mentions * 100)
+                            trend_emoji = "📈" if pct_change > 0 else "📉" if pct_change < 0 else "➡️"
+                            st.caption(f"{trend_emoji} Mentions changed by {pct_change:+.1f}% from {int(by_year.iloc[0]['year'])} to {int(by_year.iloc[-1]['year'])}")
+            
+            # Top Documents
+            st.markdown("---")
+            st.markdown("#### 📑 Documents with Most Mentions")
+            
+            display_cols = ['country', 'year', 'doc_type', 'article_mentions']
+            if 'region' in df_with_article.columns:
+                display_cols.insert(1, 'region')
+            if 'text_snippet' in df_with_article.columns:
+                display_cols.append('text_snippet')
+            
+            top_docs = df_with_article.nlargest(15, 'article_mentions')[display_cols].copy()
+            top_docs = top_docs.rename(columns={'article_mentions': 'Mentions'})
+            st.dataframe(top_docs, use_container_width=True)
+            st.caption(f"📊 Showing top 15 documents mentioning {selected_article.split('—')[0].strip()}")
 
 # =====================================================
 # TAB 4: ABOUT
