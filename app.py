@@ -330,7 +330,9 @@ countries = ["All"] + sorted(df_all.loc[(df_all["region"] == region) | (region =
 country = st.sidebar.selectbox("Country", countries, index=0)
 
 doc_types_all = sorted(df_all["doc_type"].unique())
-doc_types = st.sidebar.multiselect("Document Type", doc_types_all, default=doc_types_all)
+# Set default to only State Reports
+default_doc_types = [dt for dt in doc_types_all if "state" in dt]
+doc_types = st.sidebar.multiselect("Document Type", doc_types_all, default=default_doc_types)
 
 if "year" in df_all.columns:
     ymin, ymax = int(df_all["year"].min()), int(df_all["year"].max())
