@@ -350,6 +350,17 @@ if "year" in df_all.columns:
 else:
     year_range = None
 
+# NEW: Article Filter
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 📘 CRPD Article Filter")
+article_list = ["All Articles"] + sorted(list(ARTICLE_PRESETS.keys()))
+selected_articles = st.sidebar.multiselect(
+    "Focus on specific articles",
+    article_list,
+    default=["All Articles"],
+    help="Filter analysis to specific CRPD articles. Leave as 'All Articles' to see everything."
+)
+
 # Apply filters
 df = filter_df(df_all, region, country, doc_types, year_range)
 
