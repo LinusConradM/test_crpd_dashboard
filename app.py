@@ -126,7 +126,17 @@ CUSTOM_STYLE = """
             color: #3d5161;
             margin-top: 0;
         }
-        
+        /* About tab boxes - smaller min-height */
+
+        .about-info-box {
+            background: rgba(61, 81, 97, 0.08);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3d5161;
+            margin: 20px 0;
+            min-height: 230px;  /* Smaller than the 360px we use elsewhere */
+        }
+
         /* Insights section */
         .insights-section {
             background: #f8f9fa;
@@ -916,7 +926,7 @@ with tab_about:
     
     with col1:
         st.markdown("""
-        <div class="info-box">
+        <div class="about-info-box">
             <h4>📊 Text Analysis</h4>
             <ul style="line-height: 1.8;">
                 <li><strong>TF-IDF Analysis:</strong> Identifies distinctive terminology</li>
@@ -925,7 +935,7 @@ with tab_about:
             </ul>
         </div>
         
-        <div class="info-box" style="margin-top: 20px;">
+        <div class="about-info-box" style="margin-top: 20px;">
             <h4>🔄 Model Shift Analysis</h4>
             <ul style="line-height: 1.8;">
                 <li>Medical to rights-based evolution tracking</li>
@@ -937,7 +947,7 @@ with tab_about:
     
     with col2:
         st.markdown("""
-        <div class="info-box">
+        <div class="about-info-box">
             <h4>🌍 Comparative Analysis</h4>
             <ul style="line-height: 1.8;">
                 <li>Cross-country reporting patterns</li>
@@ -947,7 +957,7 @@ with tab_about:
             </ul>
         </div>
         
-        <div class="info-box" style="margin-top: 20px;">
+        <div class="about-info-box" style="margin-top: 20px;">
             <h4>🔮 Future Enhancements</h4>
             <ul style="line-height: 1.8;">
                 <li>World Bank Disability Data Hub integration</li>
@@ -955,16 +965,6 @@ with tab_about:
                 <li>Quantitative outcome correlations</li>
             </ul>
         </div>
-<<<<<<< HEAD
-        
-        <div class="info-box" style="margin-top: 20px;">
-            <h4>🔮 Future Enhancements</h4>
-            <ul style="line-height: 1.8;">
-                <li>World Bank Disability Data Hub integration</li>
-                <li>Disability Data Initiative metrics</li>
-                <li>Quantitative outcome correlations</li>
-            </ul>
-=======
         """, unsafe_allow_html=True)
     
     st.markdown("---")
