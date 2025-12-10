@@ -389,9 +389,11 @@ with tab_overview:
         <div class="info-box">
             <h4>📘 What is the CRPD?</h4>
             <p>The <strong>Convention on the Rights of Persons with Disabilities (CRPD)</strong> 
-            is a landmark UN human rights treaty adopted in 2006. It represents a paradigm shift 
+            is a landmark UN human rights treaty adopted in 2006. The CRPD is also a develeopment instrument, and is aligned with the 2030 Sustainable Development Goals (SDGs) and other global development strategies. It represents a paradigm shift 
             from viewing disability through a medical lens to recognizing it as a human rights issue.</p>
             <p><em>Throughout this dashboard, we use "CRPD" as an abbreviation for the Convention.</em></p>
+            <h4>🛠️ National Implementation and Monitoring</h4>
+            <p>Articles 33, 35, and 36 outline how States implement and report on the CRPD. Article 33 requires States to designate national mechanisms to coordinate implementation and independent monitoring. Article 35 mandates periodic State Party reports to the CRPD Committee detailing progress. Article 36 governs the Committee’s review process, including Lists of Issues, State responses, and the Committee’s Concluding Observations. Civil society organizations may also submit alternative or “shadow” reports to inform the Committee’s review.</p>
         </div>
         """, unsafe_allow_html=True)
     
