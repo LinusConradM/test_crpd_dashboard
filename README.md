@@ -46,6 +46,10 @@ See [docs/development_guide.md](docs/development_guide.md) for contribution guid
 - Ms. Juliana Woods, American University
 - Ms. Rachi Adhikari, American University
 - Mr. Theodore Andrew Ochieng, American University
+- Mr. John Dylan Bustillo, American University
+- Mr. Conrad Linus Muhirwe, American University
+- Ms. Sharon Wanyana, American University
+- Ms. Olivia Prezioso, Northeastern University
 - Institute on Disability and Public Policy (IDPP)
 
 ## License
@@ -53,4 +57,4 @@ This work is licensed under a [Creative Commons Attribution-NonCommercial 4.0 In
 
 
 ## Citation
-Cogburn, D. et al (2025). CRPD Disability Rights Data Dashboard. Institute on Disability and Public Policy, American University. https://idpp.connect.posit.cloud/crpd-dashboard
+Cogburn, D. et al (2026). CRPD Disability Rights Data Dashboard. Institute on Disability and Public Policy, American University. https://idpp.connect.posit.cloud/crpd-dashboard
