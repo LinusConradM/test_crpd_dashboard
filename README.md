@@ -40,17 +40,21 @@ View the dashboard at: https://idpp.connect.posit.cloud/crpd-dashboard
 ## Contributing
 See [docs/development_guide.md](docs/development_guide.md) for contribution guidelines.
 
-## Team
+## Current Team Members
 - Dr. Derrick Cogburn, American University
 - Dr. Keiko Shikako, McGill University
-- Ms. Juliana Woods, American University
-- Ms. Rachi Adhikari, American University
-- Mr. Theodore Andrew Ochieng, American University
 - Mr. John Dylan Bustillo, American University
 - Mr. Conrad Linus Muhirwe, American University
 - Ms. Sharon Wanyana, American University
+- Ms. Sofia Torres
+- Mr. Juan David Lopez
 - Ms. Olivia Prezioso, Northeastern University
 - Institute on Disability and Public Policy (IDPP)
+
+## Former Team Members
+- Ms. Juliana Woods, American University
+- Ms. Rachi Adhikari, American University
+- Mr. Theodore Andrew Ochieng, American University
 
 ## License
 This work is licensed under a [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/).
