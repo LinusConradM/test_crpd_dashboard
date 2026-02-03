@@ -384,7 +384,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-st.caption("Brought to you by the Institute on Disability and Public Policy (IDPP) at American University.")
+st.caption("Created by the Institute on Disability and Public Policy (IDPP) at American University.")
 
 # -------------------------
 # 4-TAB STRUCTURE
