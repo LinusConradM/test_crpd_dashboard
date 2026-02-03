@@ -38,8 +38,8 @@ streamlit run app.py
 View the dashboard at: https://idpp.connect.posit.cloud/crpd-dashboard
 
 ## Contributing
-See [docs/development_guide.md](docs/development_guide.md) for contribution guidelines.
-Please also see [CONTRIBUTING.md](CONTRIBUTING.md) for branching, PR, testing, and deployment guidelines.
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines, including branching, PR, testing, and deployment.
 
 ## Current Team Members
 - Dr. Derrick Cogburn, American University
