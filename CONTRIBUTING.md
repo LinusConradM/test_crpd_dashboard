@@ -148,7 +148,102 @@ Suggested commit messages:
 
 ---
 
-## 8) Asking for help
+---
+
+## 8) Reports (Quarto → PDF)
+
+We use Quarto (`.qmd`) to write and render project reports to PDF. Contributors may use any IDE (Positron, VS Code, PyCharm, etc.); the shared contract is that reports must render successfully using the Quarto CLI.
+
+### Where reports live
+Reports should be placed in:
+- `reports/` (recommended), or
+- `docs/` for shorter documentation-style pages
+
+If you introduce `reports/`, suggested structure:
+
+reports/
+├── _quarto.yml
+├── index.qmd
+└── <report-name>.qmd
+
+### Required software
+- **Quarto** (team-standard version; see below)
+- A **LaTeX** distribution for PDF rendering:
+  - Recommended: **TinyTeX** (lightweight), or
+  - TeX Live / MacTeX (heavier)
+
+### Standard render commands
+From the repository root:
+
+- Render all reports in the project:
+  - `quarto render`
+
+- Render a single report:
+  - `quarto render reports/<report-name>.qmd`
+
+### Quarto version policy
+To avoid “works on my machine” differences, contributors should use the same major/minor Quarto version.
+
+- Recommended policy: use the team’s current pinned version shown in `docs/configuration.md`
+- To check your version:
+  - `quarto --version`
+
+### Python execution in Quarto (choose one approach)
+
+Quarto can execute Python code in `.qmd` in two main ways. This project uses **one** of the following approaches (document which is current in `docs/configuration.md`):
+
+#### Option A (recommended for cross-platform teams): Jupyter kernel execution
+This approach tends to be the most consistent across IDEs and operating systems.
+
+- Ensure Jupyter is installed in your environment:
+  - `pip install jupyter`
+
+- Ensure your environment is available as a kernel (example):
+  - `python -m ipykernel install --user --name crpd-dashboard --display-name "crpd-dashboard"`
+
+- Render normally:
+  - `quarto render reports/<report-name>.qmd`
+
+Notes:
+- This option is ideal when multiple contributors have different Python installations but can standardize on a kernel name.
+
+#### Option B (direct interpreter): use a specific Python path
+This approach is useful when the project standardizes on a known Python environment per repo.
+
+- In the relevant Quarto config (e.g., `reports/_quarto.yml`), specify the interpreter path under `execute`.
+
+Example (illustrative; do not hardcode a personal machine path unless the team standardizes it):
+- `execute:`
+  - `python: /path/to/python`
+
+Then render:
+- `quarto render reports/<report-name>.qmd`
+
+Notes:
+- This option works well when the team explicitly manages Python envs and paths, but can be more machine-specific.
+
+### R execution (if applicable)
+If a report uses R code:
+- Ensure R is installed and required packages are available.
+- Render with the same `quarto render` commands above.
+
+### What to commit (PDF outputs)
+By default, we do **not** require committing rendered PDFs unless explicitly requested.
+Preferred options:
+- Commit only `.qmd` sources, and render PDFs for releases/milestones, or
+- Store PDFs in a designated folder (e.g., `reports/output/`) if the team decides to version outputs
+
+If PDFs are committed, keep them organized and avoid frequent churn.
+
+### Troubleshooting PDF rendering
+- If PDF rendering fails, it is often a LaTeX issue.
+- Confirm LaTeX is installed and working (TinyTeX or TeX Live/MacTeX).
+- Try:
+  - `quarto render reports/<report-name>.qmd --verbose`
+
+---
+
+## 9) Asking for help
 If you’re unsure where something fits:
 - Open a draft PR early, or
 - Ask a question on the Issue before implementing
