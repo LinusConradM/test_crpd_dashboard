@@ -6,10 +6,10 @@ Thanks for contributing to the CRPD Dashboard. This repo is protected so changes
 The repo is moving toward this structure (it does not fully match yet):
 
 crpd-dashboard/
-├── app.py                  # Main Streamlit application entry point
-├── data/                   # Data files (see notes below)
-├── src/                    # Source code modules (Python package-like modules)
-├── assets/                 # Static assets (images, logos, icons, etc.)
+├── app.py                  # Main Streamlit application
+├── data/                   # Data files
+├── src/                    # Source code modules
+├── assets/                 # Static assets
 └── docs/                   # Documentation
 
 If you notice the current repo differs, follow existing conventions and flag structural changes in your PR.
