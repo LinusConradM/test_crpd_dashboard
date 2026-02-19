@@ -503,7 +503,7 @@ with tab_overview:
             return f"{arrow} {abs(pct):.0f}% vs earlier period"
         return " "
 
-    if "year" in df.columns and len(df) >= 4 and df["year"].dropna().nunique() >= 2:
+    if "year" in df.columns and len(df) >= 4:
         sorted_years = sorted(df["year"].dropna().unique())
         mid_year = sorted_years[len(sorted_years) // 2]
         df_early = df[df["year"] < mid_year]
@@ -575,6 +575,7 @@ with tab_overview:
         else:
             rights_pct = 0
 
+
         review_rate = f"{(total_docs / total_countries):.1f}" if total_countries > 0 else "N/A"
 
         # Dynamic trends for Row 2
@@ -586,16 +587,8 @@ with tab_overview:
             else:
                 words_trend = " "
 
-            # Derive early/late model shift tables from precomputed mt to avoid recomputation
-            if "year" in mt.columns:
-                early_years = df_early["year"].unique() if "year" in df_early.columns else []
-                late_years  = df_late["year"].unique()  if "year" in df_late.columns  else []
-                mt_early = mt[mt["year"].isin(early_years)] if len(early_years) else mt.iloc[0:0]
-                mt_late  = mt[mt["year"].isin(late_years)]  if len(late_years)  else mt.iloc[0:0]
-            else:
-                # If mt has no year information, fall back to empty subsets
-                mt_early = mt.iloc[0:0]
-                mt_late = mt.iloc[0:0]
+            mt_early = model_shift_table(df_early)
+            mt_late  = model_shift_table(df_late)
             if len(mt_early) and len(mt_late):
                 early_r = mt_early["rights"].sum()
                 early_m = mt_early["medical"].sum()
