@@ -364,6 +364,16 @@ selected_articles = st.sidebar.multiselect(
 # Apply filters
 df = filter_df(df_all, region, country, doc_types, year_range)
 
+# Apply article filter if specific articles are selected
+if selected_articles and "All Articles" not in selected_articles:
+    article_keywords = []
+    for art in selected_articles:
+        if art in ARTICLE_PRESETS:
+            article_keywords.extend(ARTICLE_PRESETS[art])
+    if article_keywords:
+        mask = df["clean_text"].apply(lambda t: count_phrases(t, article_keywords) > 0)
+        df = df[mask]
+
 st.sidebar.markdown("---")
 st.sidebar.caption(f"**Filtered Results:** {len(df):,} of {len(df_all):,} documents")
 
@@ -384,7 +394,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-st.caption("Created by the Institute on Disability and Public Policy (IDPP) at American University.")
+st.caption("Developed by the Institute on Disability and Public Policy (IDPP) at American University.")
 
 # -------------------------
 # 4-TAB STRUCTURE
@@ -484,20 +494,49 @@ with tab_overview:
         years_display = f"{int(df['year'].min())}–{int(df['year'].max())}"
     else:
         years_display = "—"
-    
+
+    # --- Dynamic trend calculations (early vs late period split) ---
+    def pct_trend(early_val, late_val):
+        if early_val and early_val > 0:
+            pct = (late_val - early_val) / early_val * 100
+            arrow = "↑" if pct > 0 else "↓" if pct < 0 else "→"
+            return f"{arrow} {abs(pct):.0f}% vs earlier period"
+        return " "
+
+    if "year" in df.columns and len(df) >= 4 and df["year"].dropna().nunique() >= 2:
+        sorted_years = sorted(df["year"].dropna().unique())
+        mid_year = sorted_years[len(sorted_years) // 2]
+        df_early = df[df["year"] < mid_year]
+        df_late  = df[df["year"] >= mid_year]
+
+        docs_trend = pct_trend(len(df_early), len(df_late))
+
+        early_countries = df_early["country"].nunique()
+        late_countries  = df_late["country"].nunique()
+        diff = late_countries - early_countries
+        if diff > 0:
+            countries_trend = f"↑ {diff} more countries vs earlier period"
+        elif diff < 0:
+            countries_trend = f"↓ {abs(diff)} fewer countries vs earlier period"
+        else:
+            countries_trend = "→ Same countries across periods"
+    else:
+        docs_trend      = " "
+        countries_trend = " "
+
     # Row 1: Data Coverage Metrics
     col1, col2, col3, col4 = st.columns(4)
-    
+
     with col1:
         st.markdown(create_metric_card(
-            "📄", f"{total_docs:,}", "Total Documents", 
-            trend="↑ 15% vs 2020-22", color="#3d5161"
+            "📄", f"{total_docs:,}", "Total Documents",
+            trend=docs_trend, color="#3d5161"
         ), unsafe_allow_html=True)
-    
+
     with col2:
         st.markdown(create_metric_card(
-            "🌍", f"{total_countries:,}", "Countries", 
-            trend="↑ 8 new since 2020", color="#3d5161"
+            "🌍", f"{total_countries:,}", "Countries",
+            trend=countries_trend, color="#3d5161"
         ), unsafe_allow_html=True)
     
     with col3:
@@ -529,37 +568,72 @@ with tab_overview:
             top_article_topic = ""
         
         avg_words = int(df["word_count"].mean()) if "word_count" in df.columns else 0
-        
+
         mt = model_shift_table(df)
         if len(mt):
             rights_pct = (mt["rights"].sum() / (mt["rights"].sum() + mt["medical"].sum()) * 100)
         else:
             rights_pct = 0
-        
+
         review_rate = f"{(total_docs / total_countries):.1f}" if total_countries > 0 else "N/A"
+
+        # Dynamic trends for Row 2
+        if "year" in df.columns and len(df) >= 4:
+            if "word_count" in df.columns:
+                early_words = df_early["word_count"].mean() if len(df_early) else 0
+                late_words  = df_late["word_count"].mean()  if len(df_late)  else 0
+                words_trend = pct_trend(early_words, late_words)
+            else:
+                words_trend = " "
+
+            # Derive early/late model shift tables from precomputed mt to avoid recomputation
+            if "year" in mt.columns:
+                early_years = df_early["year"].unique() if "year" in df_early.columns else []
+                late_years  = df_late["year"].unique()  if "year" in df_late.columns  else []
+                mt_early = mt[mt["year"].isin(early_years)] if len(early_years) else mt.iloc[0:0]
+                mt_late  = mt[mt["year"].isin(late_years)]  if len(late_years)  else mt.iloc[0:0]
+            else:
+                # If mt has no year information, fall back to empty subsets
+                mt_early = mt.iloc[0:0]
+                mt_late = mt.iloc[0:0]
+            if len(mt_early) and len(mt_late):
+                early_r = mt_early["rights"].sum()
+                early_m = mt_early["medical"].sum()
+                late_r  = mt_late["rights"].sum()
+                late_m  = mt_late["medical"].sum()
+                early_rights_pct = (early_r / (early_r + early_m) * 100) if (early_r + early_m) > 0 else 0
+                late_rights_pct  = (late_r  / (late_r  + late_m)  * 100) if (late_r  + late_m)  > 0 else 0
+                rights_trend = pct_trend(early_rights_pct, late_rights_pct)
+            else:
+                rights_trend = " "
+        else:
+            words_trend  = " "
+            rights_trend = " "
     else:
         top_article_short = "N/A"
         top_article_topic = ""
         avg_words = 0
         rights_pct = 0
         review_rate = "N/A"
-    
+        words_trend  = " "
+        rights_trend = " "
+
     with col1:
         st.markdown(create_metric_card(
             "📘", top_article_short, "Most Reported Article",
             trend=top_article_full, color="#3d5161"
         ), unsafe_allow_html=True)
-    
+
     with col2:
         st.markdown(create_metric_card(
             "📝", f"{avg_words:,}", "Avg Words/Document",
-            trend="↑ 12% vs 2010-15", color="#3d5161"
+            trend=words_trend, color="#3d5161"
         ), unsafe_allow_html=True)
-    
+
     with col3:
         st.markdown(create_metric_card(
             "⚖️", f"{rights_pct:.1f}%", "Rights-Based Language",
-            trend="↑ 23% vs 2010-15", color="#3d5161"
+            trend=rights_trend, color="#3d5161"
         ), unsafe_allow_html=True)
     
     with col4:
@@ -774,6 +848,7 @@ with tab_explore:
                 display_cols.append("text_snippet")
             
             st.dataframe(df[display_cols].sort_values("year", ascending=False), use_container_width=True)
+
         else:
             st.info("No documents match current filters.")
 
