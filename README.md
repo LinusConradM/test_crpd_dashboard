@@ -10,7 +10,7 @@ This dashboard provides researchers, policymakers, and advocates with tools to e
 - Temporal analysis (2010-2025)
 - Comparative analysis tools
 - Document type explorer
-- Data export capabilities
+- Data export capabilities (removed for now for freemium; defered for premium).
 
 ## Data
 - **Source**: UN Treaty Body Database
