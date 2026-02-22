@@ -1115,6 +1115,56 @@ with tab_analyze:
             st.dataframe(top_docs, use_container_width=True)
             st.caption(f"📊 Showing top 15 documents mentioning {selected_article.split('—')[0].strip()}")
 
+            # Article 13 Spotlight — extra analysis for Access to Justice
+            if "Article 13" in selected_article:
+                st.markdown("---")
+                st.markdown("#### ⚖️ Article 13 Spotlight: Access to Justice")
+                st.caption("Additional analysis drawn from justice-related language in the filtered documents.")
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    freq_df = keyword_counts(df_with_article, top_n=20)
+                    if not freq_df.empty:
+                        fig = px.bar(
+                            freq_df.sort_values("freq"),
+                            x="freq", y="term", orientation="h",
+                            title="Top Terms in Article 13 Documents",
+                            labels={"freq": "Frequency", "term": "Term"}
+                        )
+                        fig.update_layout(height=450)
+                        st.plotly_chart(fig, use_container_width=True)
+                        st.caption("Most frequent words in documents mentioning Article 13.")
+
+                with col2:
+                    justice_keywords = ["justice", "court", "legal", "tribunal", "procedural",
+                                        "police", "prison", "lawyer", "representation", "fair trial"]
+                    concern_keywords = ["barrier", "lack", "inaccessible", "discrimination",
+                                        "concern", "obstacle", "failure", "inadequate"]
+                    if len(df_with_article):
+                        justice_total = df_with_article["clean_text"].apply(
+                            lambda t: count_phrases(t, justice_keywords)
+                        ).sum()
+                        concern_total = df_with_article["clean_text"].apply(
+                            lambda t: count_phrases(t, concern_keywords)
+                        ).sum()
+                        tone_df = pd.DataFrame({
+                            "Category": ["Justice Access Terms", "Concern/Barrier Terms"],
+                            "Count": [int(justice_total), int(concern_total)]
+                        })
+                        fig = px.bar(
+                            tone_df, x="Category", y="Count",
+                            title="Justice Access vs. Concern Language",
+                            color="Category",
+                            color_discrete_map={
+                                "Justice Access Terms": "#26a69a",
+                                "Concern/Barrier Terms": "#ef5350"
+                            }
+                        )
+                        fig.update_layout(height=450, showlegend=False)
+                        st.plotly_chart(fig, use_container_width=True)
+                        st.caption("Higher concern language signals areas flagged by the Committee.")
+
 # =====================================================
 # TAB 4: ABOUT
 # =====================================================
