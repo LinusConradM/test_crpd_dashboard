@@ -684,18 +684,21 @@ with tab_overview:
     col1, col2 = st.columns([1.2, 1])
     
     with col1:
-        counts = df.groupby("country").size().reset_index(name="documents")
-        if not counts.empty:
-            fig = px.choropleth(
-                counts, 
-                locations="country", 
-                locationmode="country names",
-                color="documents", 
-                color_continuous_scale="Blues",
-                title="Number of CRPD Documents by Country"
+        region_counts = df.groupby("region").size().reset_index(name="documents").sort_values("documents", ascending=True)
+        if not region_counts.empty:
+            fig = px.bar(
+                region_counts,
+                x="documents",
+                y="region",
+                orientation="h",
+                title="Documents by Region",
+                labels={"documents": "Number of Documents", "region": "Region"},
+                color="documents",
+                color_continuous_scale="Blues"
             )
-            fig.update_layout(height=500)
+            fig.update_layout(height=500, coloraxis_showscale=False)
             st.plotly_chart(fig, use_container_width=True)
+        st.caption("🗺️ See the full interactive world map in the Explore tab → Map View")
     
     with col2:
         if "year" in df.columns:
