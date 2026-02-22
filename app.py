@@ -832,15 +832,29 @@ with tab_explore:
     # Document Explorer
     with explore_subtabs[3]:
         st.subheader("Browse Documents")
-        
+
         if len(df):
-            st.write(f"Showing {len(df):,} documents matching current filters")
-            
+            search_query = st.text_input(
+                "Search document text",
+                placeholder="e.g. inclusive education, legal capacity, reasonable accommodation...",
+                help="Searches the full document text within the currently filtered results."
+            )
+
+            df_search = df.copy()
+            if search_query.strip():
+                mask = df_search["clean_text"].astype(str).str.contains(
+                    search_query.strip(), case=False, na=False, regex=False
+                )
+                df_search = df_search[mask]
+                st.caption(f"Found **{len(df_search):,}** documents containing '{search_query}' (out of {len(df):,} filtered)")
+            else:
+                st.caption(f"Showing {len(df_search):,} documents matching current filters")
+
             # Document table
             display_cols = ["country", "year", "doc_type", "region"]
-            if "word_count" in df.columns:
+            if "word_count" in df_search.columns:
                 display_cols.append("word_count")
-            if "text_snippet" in df.columns:
+            if "text_snippet" in df_search.columns:
                 display_cols.append("text_snippet")
             
             st.dataframe(df[display_cols].sort_values("year", ascending=False), use_container_width=True)
