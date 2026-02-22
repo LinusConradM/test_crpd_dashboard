@@ -9,11 +9,20 @@
 # =====================================================
 
 import streamlit as st
+import pandas as pd
+import plotly.express as px
 
 from src.styles import CUSTOM_STYLE
 from src.data_loader import load_data, load_article_dict
-from src.filters import render_sidebar
-from src import tab_overview, tab_explore, tab_analyze, tab_about
+from src.filters import filter_df
+from src.analysis import (
+    count_phrases,
+    article_frequency,
+    keyword_counts,
+    tfidf_by_doc_type,
+    model_shift_table,
+)
+from src.components import create_metric_card, pct_trend
 
 # -------------------------
 # Page Configuration
@@ -98,7 +107,7 @@ st.markdown("""
             border-left: 4px solid #667eea; border-radius: 6px;'>
     <p style='font-size: 1.3rem; font-weight: 500; margin: 0; line-height: 1.5;'>
         <strong>The first comprehensive interactive platform</strong> tracking CRPD implementation
-        across 143 countries through <strong>five document types spanning the complete UN reporting cycle</strong>
+        across 143 countries through <strong>five document types spanning the complete UN CRPD reporting cycle</strong>
         from 2010–2025 — mapping how nations translate disability rights into policy, practice, and progress.
     </p>
 </div>
@@ -119,7 +128,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # =====================================================
 # TAB 1: OVERVIEW
 # =====================================================
-with tab_overview:
+with tab1:
     st.header("Understanding CRPD Implementation")
     
     # Two-column layout for "What" and "Why"
@@ -130,8 +139,8 @@ with tab_overview:
         <div class="info-box">
             <h4>📘 What is the CRPD?</h4>
             <p>The <strong>Convention on the Rights of Persons with Disabilities (CRPD)</strong> 
-            is a landmark UN human rights treaty adopted in 2006. The CRPD is also a develeopment instrument, and is aligned with the 2030 Sustainable Development Goals (SDGs) and other global development strategies. It represents a paradigm shift 
-            from viewing disability through a medical lens to recognizing it as a human rights issue.</p>
+            is a landmark UN human rights treaty adopted in 2006. The CRPD is also a development instrument, and is aligned with the 2030 Sustainable Development Goals (SDGs) and other global development strategies. It represents a paradigm shift 
+            from viewing disability through a medical lens to recognizing it as a social justice and human rights issue.</p>
             <p><em>Throughout this dashboard, we use "CRPD" as an abbreviation for the Convention.</em></p>
             <h4>🛠️ National Implementation and Monitoring</h4>
             <p>Articles 33, 35, and 36 outline how States implement and report on the CRPD. Article 33 requires States to designate national mechanisms to coordinate implementation and independent monitoring. Article 35 mandates periodic State Party reports to the CRPD Committee detailing progress. Article 36 governs the Committee’s review process, including Lists of Issues, State responses, and the Committee’s Concluding Observations. Civil society organizations may also submit alternative or “shadow” reports to inform the Committee’s review.</p>
@@ -206,12 +215,6 @@ with tab_overview:
         years_display = "—"
 
     # --- Dynamic trend calculations (early vs late period split) ---
-    def pct_trend(early_val, late_val):
-        if early_val and early_val > 0:
-            pct = (late_val - early_val) / early_val * 100
-            arrow = "↑" if pct > 0 else "↓" if pct < 0 else "→"
-            return f"{arrow} {abs(pct):.0f}% vs earlier period"
-        return " "
 
     if "year" in df.columns and len(df) >= 4:
         sorted_years = sorted(df["year"].dropna().unique())
@@ -522,7 +525,7 @@ with tab_overview:
 # =====================================================
 # TAB 2: EXPLORE
 # =====================================================
-with tab_explore:
+with tab2:
     st.header("Interactive Data Exploration")
     st.caption("Use the sidebar filters to customize your view, then explore different perspectives below.")
     
@@ -772,7 +775,7 @@ with tab_explore:
 # =====================================================
 # TAB 3: ANALYZE
 # =====================================================
-with tab_analyze:
+with tab3:
     st.header("Deep-Dive Analysis Tools")
     
     # Analysis type selector
@@ -1075,7 +1078,7 @@ with tab_analyze:
 # =====================================================
 # TAB 4: ABOUT
 # =====================================================
-with tab_about:
+with tab4:
     st.header("About the CRPD Dashboard")
     
     st.subheader("📋 Project Overview")
@@ -1240,7 +1243,7 @@ with tab_about:
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #888; font-size: 0.9em;'>
-    Dashboard developed by Dr. Derrick Cogburn and the <b>Institute on Disability and Public Policy (IDPP)</b> research team.<br>
-    © 2025 American University
+    Dashboard developed by Dr. Derrick Cogburn and the <b>Institute on Disability and Public Policy (IDPP)</b> at <b>American University</b>.<br>
+    © 2025-2026 Derrick Cogburn
 </div>
 """, unsafe_allow_html=True)

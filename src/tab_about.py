@@ -127,20 +127,28 @@ def render():
         Associate Member, Department of Ethics, Equity and Policy | MUHC-RI | CanChild
 
         **Research Team Members**
+        Mr. Conrad Linus Muhirwe
+        Mr. John Dylan Bustillo
+        Ms. Anja Herman, American University
+        Ms. Ananya Chandra, McGill University
+        Ms. Sharon Wanyana, American University
+        Ms. Olivia Prezioso, Northeastern University
+        Ms. Sofia Torres
+        Mr. Juan David Lopez
         Ms. Juliana Woods, American University
         Ms. Rachi Adhikari, American University
-        Ms. Anja Herman, American University
+
+        **Former Research Team Members**
         Mr. Theodore Andrew Ochieng, American University
         Ms. Mina Aydin, University of Virginia
-        Ms. Ananya Chandra, McGill University
         """)
 
     with col2:
         st.markdown("""
         **Project Information**
-        Developed: 2024-2025
-        Version: 6.0
-        Last Updated: December 2024
+        Developed: 2024-2026
+        Version: 7.0
+        Last Updated: February 2026
 
         **Citation**
         Cogburn, D., et al (2025). *CRPD Disability Rights Data Dashboard*.
