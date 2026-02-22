@@ -1068,7 +1068,7 @@ with tab_analyze:
     # Analysis type selector
     analysis_type = st.radio(
         "Select Analysis Type:",
-        ["CRPD Article Coverage", "Article Deep-Dive", "Keywords & Topics", "Comparative Analysis", "Model Shift Analysis"],
+        ["CRPD Article Coverage", "Article Deep-Dive", "Keywords & Topics", "Comparative Analysis", "Model Shift Analysis", "Article Co-occurrence"],
         horizontal=True
     )
     
