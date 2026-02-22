@@ -817,7 +817,7 @@ with tab_explore:
     st.caption("Use the sidebar filters to customize your view, then explore different perspectives below.")
     
     # Sub-tabs within Explore
-    explore_subtabs = st.tabs(["🗺️ Map View", "📈 Trends", "🏛️ Country Profiles", "📋 Document Explorer"])
+    explore_subtabs = st.tabs(["🗺️ Map View", "📈 Trends", "🏛️ Country Profiles", "🔀 Compare Countries", "📋 Document Explorer"])
     
     # Map View
     with explore_subtabs[0]:
@@ -915,8 +915,119 @@ with tab_explore:
         else:
             st.info("No countries available with current filters.")
     
-    # Document Explorer
+    # Compare Countries
     with explore_subtabs[3]:
+        st.subheader("Multi-Country Comparison")
+        st.caption("Select 2–5 countries to compare side-by-side across key dimensions.")
+
+        available_countries = sorted(df["country"].unique()) if len(df) else []
+        selected_countries = st.multiselect(
+            "Select countries to compare:",
+            options=available_countries,
+            default=available_countries[:2] if len(available_countries) >= 2 else available_countries,
+            help="Choose between 2 and 5 countries."
+        )
+
+        if len(selected_countries) < 2:
+            st.info("Select at least 2 countries to begin comparison.")
+        elif len(selected_countries) > 5:
+            st.warning("Please select no more than 5 countries for a clear comparison.")
+        else:
+            cmp_df = df[df["country"].isin(selected_countries)]
+
+            # --- Summary metrics table ---
+            st.markdown("#### Summary Metrics")
+            summary_rows = []
+            for c in selected_countries:
+                cdf = cmp_df[cmp_df["country"] == c]
+                mt_c = model_shift_table(cdf)
+                total_model = mt_c["rights"].sum() + mt_c["medical"].sum() if len(mt_c) else 0
+                r_pct = mt_c["rights"].sum() / total_model * 100 if total_model > 0 else 0
+                yrange = (
+                    f"{int(cdf['year'].min())}–{int(cdf['year'].max())}"
+                    if "year" in cdf.columns and len(cdf) else "—"
+                )
+                summary_rows.append({
+                    "Country":         c,
+                    "Documents":       len(cdf),
+                    "Doc Types":       cdf["doc_type"].nunique(),
+                    "Avg Words":       int(cdf["word_count"].mean()) if "word_count" in cdf.columns and len(cdf) else 0,
+                    "Rights Lang. %":  f"{r_pct:.1f}%",
+                    "Year Range":      yrange,
+                })
+            st.dataframe(pd.DataFrame(summary_rows).set_index("Country"), use_container_width=True)
+
+            # --- Document volume by type ---
+            st.markdown("#### Document Volume by Type")
+            doc_type_counts = (
+                cmp_df.groupby(["country", "doc_type"]).size().reset_index(name="count")
+            )
+            fig_vol = px.bar(
+                doc_type_counts, x="country", y="count", color="doc_type", barmode="group",
+                title="Documents by Type per Country",
+                labels={"count": "Documents", "country": "Country", "doc_type": "Type"},
+                color_discrete_sequence=px.colors.qualitative.Set2
+            )
+            st.plotly_chart(fig_vol, use_container_width=True)
+
+            # --- Top articles comparison ---
+            st.markdown("#### Top CRPD Articles Referenced")
+            art_frames = []
+            for c in selected_countries:
+                af = article_frequency(cmp_df[cmp_df["country"] == c], ARTICLE_PRESETS)
+                if not af.empty:
+                    af = af.copy()
+                    af["country"] = c
+                    art_frames.append(af)
+
+            if art_frames:
+                combined_art = pd.concat(art_frames)
+                top_articles  = (
+                    combined_art.groupby("article")["count"].sum()
+                    .nlargest(10).index
+                )
+                top_art_df = (
+                    combined_art[combined_art["article"].isin(top_articles)]
+                    .groupby(["country", "article"])["count"].sum().reset_index()
+                )
+                top_art_df["article_short"] = top_art_df["article"].apply(
+                    lambda x: x.split("—")[0].strip() if "—" in x else x
+                )
+                fig_art = px.bar(
+                    top_art_df, x="article_short", y="count", color="country", barmode="group",
+                    title="Top 10 Articles Referenced (by country)",
+                    labels={"count": "Keyword Mentions", "article_short": "Article", "country": "Country"},
+                    color_discrete_sequence=px.colors.qualitative.Pastel
+                )
+                fig_art.update_layout(xaxis_tickangle=-35)
+                st.plotly_chart(fig_art, use_container_width=True)
+
+            # --- Rights vs Medical language ---
+            st.markdown("#### Rights-Based vs. Medical Model Language")
+            model_rows = []
+            for c in selected_countries:
+                mt_c = model_shift_table(cmp_df[cmp_df["country"] == c])
+                if len(mt_c):
+                    model_rows.append({
+                        "Country":       c,
+                        "Rights-Based":  int(mt_c["rights"].sum()),
+                        "Medical Model": int(mt_c["medical"].sum()),
+                    })
+            if model_rows:
+                model_melt = pd.DataFrame(model_rows).melt(
+                    id_vars="Country", var_name="Model", value_name="Count"
+                )
+                fig_model = px.bar(
+                    model_melt, x="Country", y="Count", color="Model", barmode="group",
+                    title="Rights-Based vs. Medical Model Language by Country",
+                    color_discrete_map={"Rights-Based": "#26a69a", "Medical Model": "#ef5350"}
+                )
+                st.plotly_chart(fig_model, use_container_width=True)
+            else:
+                st.info("Not enough model-language data for selected countries.")
+
+    # Document Explorer
+    with explore_subtabs[4]:
         st.subheader("Browse Documents")
 
         if len(df):
