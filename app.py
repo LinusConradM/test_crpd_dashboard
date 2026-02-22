@@ -639,41 +639,127 @@ with tab_overview:
     st.markdown("---")
     st.markdown("""
     <div class="insights-section">
-        <h3 style="margin-top: 0;color: #3d5161;">💡 Key Insights from 15 Years of CRPD Data</h3>
+        <h3 style="margin-top: 0;color: #3d5161;">💡 Key Insights from CRPD Data</h3>
     </div>
     """, unsafe_allow_html=True)
-    
+
+    # --- Compute dynamic insight values ---
+    if len(df):
+        # 1. Global reporting patterns: best region by docs-per-country
+        region_rates = df.groupby("region").apply(
+            lambda x: len(x) / x["country"].nunique()
+        ).sort_values(ascending=False)
+        best_reg  = region_rates.index[0]  if not region_rates.empty else "N/A"
+        best_rate = f"{region_rates.iloc[0]:.1f}" if not region_rates.empty else "N/A"
+        reporting_summary = (
+            f"{total_countries} countries are represented in the current view. "
+            f"{best_reg} leads with {best_rate} documents per country on average."
+        )
+
+        # 2. Model shift: use already-computed rights_pct and rights_trend
+        trend_note = rights_trend.strip() if rights_trend.strip() else "Trend data unavailable for current filters."
+        model_shift_text = (
+            f"Rights-based language accounts for {rights_pct:.1f}% of model-related terms "
+            f"in the current data. {trend_note}"
+        )
+
+        # 3. Document evolution: compare early vs late avg word count for concluding observations
+        if "word_count" in df.columns and "year" in df.columns and len(df) >= 4:
+            co_sub = df[df["doc_type"] == "concluding observations"]
+            if len(co_sub) >= 4:
+                co_years = sorted(co_sub["year"].dropna().unique())
+                co_mid   = co_years[len(co_years) // 2]
+                early_w  = co_sub[co_sub["year"] <  co_mid]["word_count"].mean()
+                late_w   = co_sub[co_sub["year"] >= co_mid]["word_count"].mean()
+                if early_w and late_w:
+                    pct_w = (late_w - early_w) / early_w * 100
+                    arw = "↑" if pct_w > 0 else "↓" if pct_w < 0 else "→"
+                    doc_evolution = (
+                        f"Concluding Observations grew {arw} {abs(pct_w):.0f}% in average length "
+                        f"(from ~{int(early_w):,} to ~{int(late_w):,} words), reflecting deeper analysis over time."
+                    )
+                else:
+                    doc_evolution = f"Average document length is {avg_words:,} words."
+            else:
+                doc_evolution = f"Average document length is {avg_words:,} words."
+        else:
+            doc_evolution = f"Average document length is {avg_words:,} words."
+
+        # 4. Regional disparities: gap between highest and lowest docs-per-country region
+        if len(region_rates) > 1:
+            worst_reg  = region_rates.index[-1]
+            disp_pct   = (region_rates.iloc[0] - region_rates.iloc[-1]) / region_rates.iloc[0] * 100
+            regional_disp = (
+                f"{worst_reg} has {disp_pct:.0f}% fewer documents per country than {best_reg}, "
+                f"highlighting uneven reporting capacity across regions."
+            )
+        else:
+            regional_disp = f"Only one region found in the current filtered data: {best_reg}."
+
+        # 5. Article emphasis: most-mentioned vs Article 13
+        if not art_freq.empty:
+            art_totals = art_freq.groupby("article")["count"].sum().sort_values(ascending=False)
+            top_name   = art_totals.index[0]
+            top_cnt    = int(art_totals.iloc[0])
+            a13_key    = next((k for k in art_totals.index if "Article 13" in k), None)
+            if a13_key and art_totals[a13_key] > 0 and top_name != a13_key:
+                ratio      = top_cnt / art_totals[a13_key]
+                top_short  = top_name.split("—")[1].strip() if "—" in top_name else top_name
+                top_num    = top_name.split("—")[0].strip()
+                article_emphasis = (
+                    f"{top_short} ({top_num}) is referenced {ratio:.1f}× more than "
+                    f"Access to Justice (Article 13), indicating clear priority differences."
+                )
+            else:
+                top_short = top_name.split("—")[1].strip() if "—" in top_name else top_name
+                article_emphasis = f"{top_short} is the most frequently referenced article in the current data."
+        else:
+            article_emphasis = "Article frequency analysis unavailable for current filters."
+
+        # 6. Implementation gaps: % of countries with COs that also filed a response
+        co_set   = set(df[df["doc_type"] == "concluding observations"]["country"].dropna())
+        resp_set = set(df[df["doc_type"] == "response to concluding observations"]["country"].dropna())
+        if co_set:
+            resp_pct = len(resp_set & co_set) / len(co_set) * 100
+            impl_gap = (
+                f"{resp_pct:.0f}% of countries that received Concluding Observations have "
+                f"submitted a formal response, indicating follow-through challenges."
+            )
+        else:
+            impl_gap = "Response rate data unavailable for current filters."
+    else:
+        reporting_summary = "No data available for current filters."
+        model_shift_text  = "N/A"
+        doc_evolution     = "N/A"
+        regional_disp     = "N/A"
+        article_emphasis  = "N/A"
+        impl_gap          = "N/A"
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
-        st.markdown("""
+        st.markdown(f"""
         <div class="insight-item">
-            <strong>Global Reporting Patterns:</strong> 78% of State Parties have submitted at least one 
-            report, with European nations showing the highest compliance rates at 94%.
+            <strong>Global Reporting Patterns:</strong> {reporting_summary}
         </div>
         <div class="insight-item">
-            <strong>Model Shift Progress:</strong> Rights-based language increased 127% from 2010-2015 
-            to 2020-2025, indicating a fundamental shift in how disability is framed globally.
+            <strong>Model Shift Progress:</strong> {model_shift_text}
         </div>
         <div class="insight-item">
-            <strong>Document Evolution:</strong> Committee Concluding Observations grew from an average 
-            of 3,200 words in 2010 to 5,800 words in 2024, reflecting more detailed analysis.
+            <strong>Document Evolution:</strong> {doc_evolution}
         </div>
         """, unsafe_allow_html=True)
-    
+
     with col2:
-        st.markdown("""
+        st.markdown(f"""
         <div class="insight-item">
-            <strong>Regional Disparities:</strong> African and Pacific regions show 40% lower reporting 
-            frequency compared to European and Asian regions, highlighting implementation gaps.
+            <strong>Regional Disparities:</strong> {regional_disp}
         </div>
         <div class="insight-item">
-            <strong>Article Emphasis:</strong> Education (Article 24) is mentioned 3.2 times more 
-            frequently than Access to Justice (Article 13), suggesting priority differences.
+            <strong>Article Emphasis:</strong> {article_emphasis}
         </div>
         <div class="insight-item">
-            <strong>Implementation Gaps:</strong> Only 23% of countries submit timely responses to 
-            Concluding Observations, indicating challenges in follow-through.
+            <strong>Implementation Gaps:</strong> {impl_gap}
         </div>
         """, unsafe_allow_html=True)
     
