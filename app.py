@@ -353,7 +353,10 @@ else:
 # NEW: Article Filter
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📘 CRPD Article Filter")
-article_list = ["All Articles"] + sorted(list(ARTICLE_PRESETS.keys()))
+article_list = ["All Articles"] + sorted(
+    list(ARTICLE_PRESETS.keys()),
+    key=lambda x: int(x.split()[1])
+)
 selected_articles = st.sidebar.multiselect(
     "Focus on all or specific articles",
     article_list,
@@ -1186,7 +1189,7 @@ with tab_analyze:
         # Article selector
         selected_article = st.selectbox(
             "Select CRPD Article to analyze:",
-            sorted(list(ARTICLE_PRESETS.keys())),
+            sorted(list(ARTICLE_PRESETS.keys()), key=lambda x: int(x.split()[1])),
             help="Choose an article to see detailed analysis of its coverage"
         )
         
