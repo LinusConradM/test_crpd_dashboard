@@ -1,19 +1,19 @@
 # =====================================================
-# 🌍 CRPD Disability Rights Data Dashboard (v6.0)
+# CRPD Disability Rights Data Dashboard
 # -----------------------------------------------------
-# MAJOR RESTRUCTURE: 4-Tab Architecture
+# Modular 4-Tab Architecture
 # - Tab 1: Overview (Key Indicators + Insights)
 # - Tab 2: Explore (Interactive filtering + views)
 # - Tab 3: Analyze (Deep-dive analyses)
 # - Tab 4: About (Documentation + methodology)
 # =====================================================
 
-import re
-import numpy as np
-import pandas as pd
 import streamlit as st
-import plotly.express as px
-from collections import Counter
+
+from src.styles import CUSTOM_STYLE
+from src.data_loader import load_data, load_article_dict
+from src.filters import render_sidebar
+from src import tab_overview, tab_explore, tab_analyze, tab_about
 
 # -------------------------
 # Page Configuration
@@ -25,300 +25,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# -------------------------
-# Custom CSS Styling
-# -------------------------
-CUSTOM_STYLE = """
-    <style>
-        /* Hide Streamlit default elements */
-        .block-container{padding-top:1.2rem;}
-        header {visibility: hidden;}
-        footer {visibility: hidden;}
-        
-        /* Enhanced text sizing */
-        .stApp p {
-            font-size: 1.05rem;
-            line-height: 1.6;
-        }
-        
-        /* Tab styling */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 8px;
-            background-color: #3d5161;
-            padding: 10px 20px;
-            border-radius: 8px 8px 0 0;
-        }
-        
-        .stTabs [data-baseweb="tab-list"] button {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: white;
-            background-color: transparent;
-            border-radius: 6px 6px 0 0;
-            padding: 12px 24px;
-        }
-        
-        .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
-            background-color: #26a69a;
-            color: white;
-        }
-        
-        .stTabs [data-baseweb="tab-list"] button:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        /* Metric card styling */
-        .metric-card {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
-            border-top: 4px solid;
-            margin-bottom: 10px;
-            min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        
-        .metric-icon {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        
-        .metric-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #1f1f1f;
-            margin: 10px 0;
-        }
-        
-        .metric-label {
-            font-size: 0.9rem;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .metric-trend {
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-top: 8px;
-            min-height: 20px;
-        }
-        
-        .trend-up { color: #2e7d32; }
-        .trend-down { color: #c62828; }
-        .trend-neutral { color: #f57c00; }
-        
-        /* Info boxes */
-        .info-box {
-            background: rgba(61, 81, 97, 0.08);
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #3d5161;
-            margin: 20px 0;
-            min-height: 400px;
-        }
-        
-        .info-box h4 {
-            color: #3d5161;
-            margin-top: 0;
-        }
-        /* About tab boxes - smaller min-height */
-
-        .about-info-box {
-            background: rgba(61, 81, 97, 0.08);
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #3d5161;
-            margin: 20px 0;
-            min-height: 230px;  /* Smaller than the 360px we use elsewhere */
-        }
-
-        /* Insights section */
-        .insights-section {
-            background: #f8f9fa;
-            padding: 30px;
-            border-radius: 8px;
-            border-left: 4px solid #3d5161;
-            margin: 20px 0;
-        }
-        
-        .insight-item {
-            margin-bottom: 15px;
-            line-height: 1.8;
-        }
-        
-        .insight-item strong {
-            color: #1f1f1f;
-        }
-        
-        /* Section headers */
-        h3 {
-            font-size: 1.5rem;
-            margin-top: 2rem;
-            color: #1f1f1f;
-        }
-        
-        /* Two-column layouts */
-        .two-col-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 20px 0;
-        }
-    </style>
-"""
 st.markdown(CUSTOM_STYLE, unsafe_allow_html=True)
-
-# -------------------------
-# Load Data & Dictionaries
-# -------------------------
-@st.cache_data(show_spinner=True)
-def load_data(csv_path: str):
-    df = pd.read_csv(csv_path)
-    df.columns = df.columns.str.strip().str.lower()
-    if "year" in df.columns:
-        df["year"] = pd.to_numeric(df["year"], errors="coerce").astype("Int64")
-    for c in ["doc_type", "country", "region", "subregion", "language"]:
-        if c in df.columns:
-            df[c] = df[c].astype(str).str.strip()
-    if "text_snippet" not in df.columns and "clean_text" in df.columns:
-        df["text_snippet"] = df["clean_text"].apply(lambda x: " ".join(str(x).split()[:120]))
-    return df
-
-@st.cache_data
-def load_article_dict():
-    try:
-        from crpd_article_dict import ARTICLE_PRESETS
-        return ARTICLE_PRESETS
-    except Exception as e:
-        st.warning(f"Couldn't load article dictionary ({e}); using fallback.")
-        return {
-            "Article 9 — Accessibility": ["accessibility", "barrier", "universal design"],
-            "Article 13 — Access to Justice": ["justice", "court", "legal"],
-            "Article 24 — Education": ["education", "school", "inclusive education"]
-        }
-
-MODEL_DICT = {
-    "Medical Model": [
-        "treatment","rehabilitation","therapy","patient","disorder","impairment",
-        "illness","diagnosis","caregiver","institution","special needs","cure"
-    ],
-    "Rights-Based Model": [
-        "inclusion","equality","accessibility","participation","autonomy",
-        "independent living","reasonable accommodation","universal design",
-        "dignity","rights","empowerment","access to justice"
-    ]
-}
-
-# -------------------------
-# Helper Functions
-# -------------------------
-def filter_df(df, region, country, doc_types, year_range):
-    d = df.copy()
-    if region and region != "All":
-        d = d[d["region"] == region]
-    if country and country != "All":
-        d = d[d["country"] == country]
-    if doc_types:
-        d = d[d["doc_type"].isin(doc_types)]
-    if year_range and "year" in d.columns:
-        ymin, ymax = year_range
-        d = d[(d["year"].fillna(0) >= ymin) & (d["year"].fillna(9999) <= ymax)]
-    return d
-
-def count_phrases(text, phrases):
-    if not isinstance(text, str):
-        return 0
-    total = 0
-    for kw in phrases:
-        total += len(re.findall(r"\b" + re.escape(kw) + r"\b", text, re.IGNORECASE))
-    return total
-
-@st.cache_data
-def article_frequency(df, article_dict, groupby=None):
-    rows = []
-    iterable = [(None, df)] if not groupby else df.groupby(groupby)
-    for g, sub in iterable:
-        for art, kws in article_dict.items():
-            c = sub["clean_text"].apply(lambda t: count_phrases(t, kws)).sum()
-            rows.append({"group": ("All" if g is None else g), "article": art, "count": int(c)})
-    out = pd.DataFrame(rows)
-    return out[out["count"] > 0].sort_values("count", ascending=False)
-
-@st.cache_data
-def keyword_counts(df, top_n=30):
-    cnt = Counter()
-    for t in df["clean_text"].astype(str).tolist():
-        cnt.update(w for w in t.split() if 2 <= len(w) <= 25)
-    return pd.DataFrame(cnt.items(), columns=["term", "freq"]).sort_values("freq", ascending=False).head(top_n)
-
-@st.cache_data
-def tfidf_by_doc_type(df, top_n=20):
-    try:
-        from sklearn.feature_extraction.text import TfidfVectorizer
-    except ImportError:
-        st.warning("scikit-learn not installed; using frequency fallback.")
-        return keyword_counts(df, top_n).assign(doc_type="All").rename(columns={"freq":"score"})
-    rows = []
-    for dt, sub in df.groupby("doc_type"):
-        docs = sub["clean_text"].dropna().astype(str).tolist()
-        if len(docs) < 2:
-            topk = keyword_counts(sub, top_n)
-            topk["doc_type"] = dt
-            rows.append(topk.rename(columns={"freq": "score"}))
-            continue
-        n_docs = len(docs)
-        min_df = 1 if n_docs < 10 else 2
-        max_df = 1.0 if n_docs <= 3 else 0.9
-        try:
-            vec = TfidfVectorizer(min_df=min_df, max_df=max_df, ngram_range=(1, 2))
-            mat = vec.fit_transform(docs)
-            terms = np.array(vec.get_feature_names_out())
-            scores = np.asarray(mat.mean(axis=0)).ravel()
-            idx = scores.argsort()[::-1][:top_n]
-            tmp = pd.DataFrame({"term": terms[idx], "score": scores[idx], "doc_type": dt})
-            rows.append(tmp)
-        except ValueError:
-            topk = keyword_counts(sub, top_n)
-            topk["doc_type"] = dt
-            rows.append(topk.rename(columns={"freq": "score"}))
-    return pd.concat(rows, ignore_index=True)
-
-@st.cache_data
-def model_shift_table(df):
-    rows = []
-    for _, r in df.iterrows():
-        text = str(r.get("clean_text", ""))
-        counts = {m: count_phrases(text, kws) for m, kws in MODEL_DICT.items()}
-        total = sum(counts.values()) if sum(counts.values()) > 0 else 1
-        rows.append({
-            "region": r.get("region","Unknown"),
-            "year": r.get("year", np.nan),
-            "medical": counts["Medical Model"],
-            "rights": counts["Rights-Based Model"],
-            "rights_share": counts["Rights-Based Model"]/total
-        })
-    return pd.DataFrame(rows)
-
-def create_metric_card(icon, value, label, trend=None, color="#667eea"):
-    """Create a styled metric card with icon, value, label, and optional trend"""
-    trend_html = ""
-    if trend:
-        trend_class = "trend-up" if "↑" in trend else "trend-down" if "↓" in trend else "trend-neutral"
-        trend_html = f'<div class="metric-trend {trend_class}">{trend}</div>'
-    
-    return f"""
-    <div class="metric-card" style="border-top-color: {color};">
-        <div class="metric-icon">{icon}</div>
-        <div class="metric-value">{value}</div>
-        <div class="metric-label">{label}</div>
-        {trend_html}
-    </div>
-    """
 
 # -------------------------
 # Load Data
@@ -386,12 +93,12 @@ st.sidebar.caption(f"**Filtered Results:** {len(df):,} of {len(df_all):,} docume
 st.title("🌍 CRPD Disability Rights Data Dashboard")
 
 st.markdown("""
-<div style='margin: 1rem 0 1.5rem 0; padding: 1.5rem; 
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%); 
+<div style='margin: 1rem 0 1.5rem 0; padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
             border-left: 4px solid #667eea; border-radius: 6px;'>
     <p style='font-size: 1.3rem; font-weight: 500; margin: 0; line-height: 1.5;'>
-        <strong>The first comprehensive interactive platform</strong> tracking CRPD implementation 
-        across 143 countries through <strong>five document types spanning the complete UN reporting cycle</strong> 
+        <strong>The first comprehensive interactive platform</strong> tracking CRPD implementation
+        across 143 countries through <strong>five document types spanning the complete UN reporting cycle</strong>
         from 2010–2025 — mapping how nations translate disability rights into policy, practice, and progress.
     </p>
 </div>
@@ -402,9 +109,9 @@ st.caption("Developed by the Institute on Disability and Public Policy (IDPP) at
 # -------------------------
 # 4-TAB STRUCTURE
 # -------------------------
-tab_overview, tab_explore, tab_analyze, tab_about = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     "📊 Overview",
-    "🔍 Explore", 
+    "🔍 Explore",
     "🧪 Analyze",
     "ℹ️ About"
 ])
