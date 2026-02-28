@@ -325,95 +325,107 @@ def render(df, ARTICLE_PRESETS):
         if not len(df):
             st.info("No data available with current filters.")
         else:
+            # Show data info
+            st.caption(f"Analyzing {len(df)} documents...")
+            
             top_n = st.slider(
                 "Number of articles to include (ranked by frequency):",
                 min_value=10, max_value=25, value=15, step=5
             )
 
-            with st.spinner("Computing co-occurrence matrix…"):
-                art_freq_co = article_frequency(df, ARTICLE_PRESETS)
+            with st.spinner("Computing co-occurrence matrix… This may take a moment on first load."):
+                try:
+                    art_freq_co = article_frequency(df, ARTICLE_PRESETS)
 
-                if art_freq_co.empty:
-                    st.info("No article matches found for current filters.")
-                else:
-                    top_arts = (
-                        art_freq_co.groupby("article")["count"].sum()
-                        .sort_values(ascending=False)
-                        .head(top_n)
-                        .index.tolist()
-                    )
-
-                    # Build a binary presence matrix: documents × top articles
-                    presence = {
-                        art: df["clean_text"].apply(
-                            lambda t: int(count_phrases(t, ARTICLE_PRESETS[art]) > 0)
-                        )
-                        for art in top_arts
-                    }
-                    presence_df = pd.DataFrame(presence)
-
-                    # Co-occurrence matrix via dot product
-                    cooc = presence_df.T @ presence_df
-
-                    # Short axis labels: "Art. 13" instead of full name
-                    short_labels = {
-                        art: art.split("—")[0].strip().replace("Article ", "Art. ")
-                        for art in top_arts
-                    }
-                    cooc.index = [short_labels[a] for a in cooc.index]
-                    cooc.columns = [short_labels[a] for a in cooc.columns]
-
-                    # Zero diagonal so self-occurrence doesn't dominate the colour scale
-                    cooc_display = cooc.copy().astype(float)
-                    np.fill_diagonal(cooc_display.values, 0)
-
-                    # Heatmap
-                    fig_hm = px.imshow(
-                        cooc_display,
-                        title=f"Article Co-occurrence Heatmap (Top {top_n} Articles)",
-                        color_continuous_scale="Blues",
-                        labels={"color": "Docs with Both"},
-                        aspect="auto"
-                    )
-                    fig_hm.update_layout(height=560)
-                    st.plotly_chart(fig_hm, use_container_width=True)
-                    st.caption(
-                        "Each cell shows how many documents mention **both** articles. "
-                        "Darker = more documents address the pair together."
-                    )
-
-                    # Top co-occurring pairs ranked bar chart
-                    st.markdown("#### Top Co-occurring Article Pairs")
-                    arts = list(cooc_display.index)
-                    pairs = []
-                    for i in range(len(arts)):
-                        for j in range(i + 1, len(arts)):
-                            val = int(cooc_display.iloc[i, j])
-                            if val > 0:
-                                pairs.append({"Pair": f"{arts[i]}  +  {arts[j]}", "Documents": val})
-
-                    if pairs:
-                        pairs_df = (
-                            pd.DataFrame(pairs)
-                            .sort_values("Documents", ascending=False)
-                            .head(15)
-                        )
-                        fig_pairs = px.bar(
-                            pairs_df, x="Documents", y="Pair", orientation="h",
-                            title="Top 15 Most Frequently Co-occurring Article Pairs",
-                            labels={"Documents": "Documents Mentioning Both", "Pair": "Article Pair"},
-                            color="Documents",
-                            color_continuous_scale="Blues"
-                        )
-                        fig_pairs.update_layout(
-                            yaxis={"categoryorder": "total ascending"},
-                            height=520,
-                            coloraxis_showscale=False
-                        )
-                        st.plotly_chart(fig_pairs, use_container_width=True)
-                        st.caption(
-                            "Articles that frequently co-occur may indicate **policy clusters** — "
-                            "issues the Committee or States tend to address together."
-                        )
+                    if art_freq_co.empty:
+                        st.warning("No article matches found for current filters. Try adjusting your filters in the sidebar.")
                     else:
-                        st.info("No co-occurring pairs found for current filters.")
+                        top_arts = (
+                            art_freq_co.groupby("article")["count"].sum()
+                            .sort_values(ascending=False)
+                            .head(top_n)
+                            .index.tolist()
+                        )
+
+                        if len(top_arts) < 2:
+                            st.warning(f"Only {len(top_arts)} article(s) found. Need at least 2 articles for co-occurrence analysis. Try adjusting your filters.")
+                        else:
+                            # Build a binary presence matrix: documents × top articles
+                            presence = {
+                                art: df["clean_text"].apply(
+                                    lambda t: int(count_phrases(t, ARTICLE_PRESETS[art]) > 0)
+                                )
+                                for art in top_arts
+                            }
+                            presence_df = pd.DataFrame(presence)
+
+                            # Co-occurrence matrix via dot product
+                            cooc = presence_df.T @ presence_df
+
+                            # Short axis labels: "Art. 13" instead of full name
+                            short_labels = {
+                                art: art.split("—")[0].strip().replace("Article ", "Art. ")
+                                for art in top_arts
+                            }
+                            cooc.index = [short_labels[a] for a in cooc.index]
+                            cooc.columns = [short_labels[a] for a in cooc.columns]
+
+                            # Zero diagonal so self-occurrence doesn't dominate the colour scale
+                            cooc_display = cooc.copy().astype(float)
+                            np.fill_diagonal(cooc_display.values, 0)
+
+                            # Heatmap
+                            fig_hm = px.imshow(
+                                cooc_display,
+                                title=f"Article Co-occurrence Heatmap (Top {top_n} Articles)",
+                                color_continuous_scale="Blues",
+                                labels={"color": "Docs with Both"},
+                                aspect="auto"
+                            )
+                            fig_hm.update_layout(height=560)
+                            st.plotly_chart(fig_hm, use_container_width=True)
+                            st.caption(
+                                "Each cell shows how many documents mention **both** articles. "
+                                "Darker = more documents address the pair together."
+                            )
+
+                            # Top co-occurring pairs ranked bar chart
+                            st.markdown("#### Top Co-occurring Article Pairs")
+                            arts = list(cooc_display.index)
+                            pairs = []
+                            for i in range(len(arts)):
+                                for j in range(i + 1, len(arts)):
+                                    val = int(cooc_display.iloc[i, j])
+                                    if val > 0:
+                                        pairs.append({"Pair": f"{arts[i]}  +  {arts[j]}", "Documents": val})
+
+                            if pairs:
+                                pairs_df = (
+                                    pd.DataFrame(pairs)
+                                    .sort_values("Documents", ascending=False)
+                                    .head(15)
+                                )
+                                fig_pairs = px.bar(
+                                    pairs_df, x="Documents", y="Pair", orientation="h",
+                                    title="Top 15 Most Frequently Co-occurring Article Pairs",
+                                    labels={"Documents": "Documents Mentioning Both", "Pair": "Article Pair"},
+                                    color="Documents",
+                                    color_continuous_scale="Blues"
+                                )
+                                fig_pairs.update_layout(
+                                    yaxis={"categoryorder": "total ascending"},
+                                    height=520,
+                                    coloraxis_showscale=False
+                                )
+                                st.plotly_chart(fig_pairs, use_container_width=True)
+                                st.caption(
+                                    "Articles that frequently co-occur may indicate **policy clusters** — "
+                                    "issues the Committee or States tend to address together."
+                                )
+                            else:
+                                st.info("No co-occurring pairs found for current filters.")
+                
+                except Exception as e:
+                    st.error(f"An error occurred while computing co-occurrence: {str(e)}")
+                    st.info("This may be due to insufficient data, your current filter settings, or a timeout. Try adjusting your filters or selecting a smaller data subset.")
+

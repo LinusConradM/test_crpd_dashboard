@@ -7,33 +7,170 @@ from collections import Counter
 from src.data_loader import MODEL_DICT
 
 
+# Pre-compile regex patterns for better performance
+_COMPILED_PATTERNS_CACHE = {}
+
+
+def _get_compiled_pattern(phrase):
+    """Get or create a compiled regex pattern for a phrase."""
+    if phrase not in _COMPILED_PATTERNS_CACHE:
+        pattern = r"\b" + re.escape(phrase) + r"\b"
+        _COMPILED_PATTERNS_CACHE[phrase] = re.compile(pattern, re.IGNORECASE)
+    return _COMPILED_PATTERNS_CACHE[phrase]
+
+
+# English stopwords (common words to exclude from frequency analysis)
+STOPWORDS = {
+    'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 
+    'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 
+    'by', 'can', 'did', 'do', 'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from', 
+    'further', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 
+    'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just', 
+    'me', 'might', 'more', 'most', 'must', 'my', 'myself', 'no', 'nor', 'not', 'now', 'of', 
+    'off', 'on', 'once', 'only', 'or', 'other', 'our', 'ours', 'ourselves', 'out', 'over', 
+    'own', 'same', 'she', 'should', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 
+    'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 
+    'to', 'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where', 
+    'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'would', 'you', 'your', 'yours', 
+    'yourself', 'yourselves', 'could', 'may', 'also', 'however', 'therefore', 'thus', 'hence',
+    'moreover', 'furthermore', 'nevertheless', 'nonetheless', 'meanwhile', 'otherwise', 'whereas',
+    'yet', 'still', 'already', 'always', 'never', 'often', 'sometimes', 'usually', 'generally',
+    'particularly', 'especially', 'specifically', 'namely', 'including', 'within', 'without',
+    'upon', 'via', 'per', 'amongst', 'toward', 'towards', 'throughout', 'across', 'along',
+    'around', 'behind', 'beside', 'besides', 'beyond', 'near', 'onto', 'since', 'till',
+    'unless', 'unlike', 'whether', 'whose', 'whoever', 'whomever', 'whatever', 'whichever',
+    'wherever', 'whenever', 'however', 'indeed', 'rather', 'quite', 'fairly', 'pretty',
+    'much', 'many', 'several', 'various', 'certain', 'another', 'others', 'either', 'neither',
+    'every', 'each', 'both', 'few', 'less', 'least', 'little', 'enough', 'such', 'own',
+    'self', 'selves', 'one', 'two', 'three', 'first', 'second', 'third', 'last', 'next',
+    'previous', 'following', 'above', 'below', 'former', 'latter', 'earlier', 'later'
+}
+
+# Domain-specific stopwords for CRPD documents (procedural/structural terms)
+DOMAIN_STOPWORDS = {
+    'committee', 'state', 'party', 'article', 'paragraph', 'report', 'section', 'chapter',
+    'annex', 'appendix', 'page', 'document', 'number', 'date', 'year', 'month', 'day', 'act',
+    'january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september',
+    'october', 'november', 'december', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
+    'saturday', 'sunday', 'crpd', 'convention', 'united', 'nations', 'general', 'assembly',
+    'session', 'meeting', 'agenda', 'item', 'resolution', 'decision', 'recommendation',
+    'note', 'letter', 'communication', 'submission', 'reply', 'response', 'observation',
+    'concluding', 'initial', 'periodic', 'supplementary', 'additional', 'follow', 'followup',
+    'pursuant', 'accordance', 'regard', 'respect', 'concerning', 'regarding', 'relation',
+    'reference', 'referred', 'refers', 'referring', 'mentioned', 'noted', 'stated', 'indicated',
+    'provided', 'reported', 'informed', 'requested', 'recommended', 'urged', 'called', 'invited',
+    'welcomed', 'acknowledged', 'recognized', 'emphasized', 'stressed', 'reiterated', 'recalled',
+    'reaffirmed', 'confirmed', 'expressed', 'noted', 'took', 'took', 'made', 'adopted', 'approved',
+    'shall', 'should', 'must', 'may', 'might', 'can', 'could', 'would', 'will', 'need', 'needs',
+    'ensure', 'ensuring', 'ensured', 'ensure', 'take', 'taking', 'taken', 'make', 'making',
+    'provide', 'providing', 'given', 'give', 'giving', 'implement', 'implementing', 'implemented',
+    'establish', 'establishing', 'established', 'develop', 'developing', 'developed', 'promote',
+    'promoting', 'promoted', 'strengthen', 'strengthening', 'strengthened', 'improve', 'improving',
+    'improved', 'enhance', 'enhancing', 'enhanced', 'increase', 'increasing', 'increased',
+    'continue', 'continuing', 'continued', 'maintain', 'maintaining', 'maintained', 'support',
+    'supporting', 'supported', 'facilitate', 'facilitating', 'facilitated', 'encourage',
+    'encouraging', 'encouraged', 'address', 'addressing', 'addressed', 'consider', 'considering',
+    'considered', 'review', 'reviewing', 'reviewed', 'monitor', 'monitoring', 'monitored',
+    'evaluate', 'evaluating', 'evaluated', 'assess', 'assessing', 'assessed'
+}
+
+# Combine all stopwords
+ALL_STOPWORDS = STOPWORDS | DOMAIN_STOPWORDS
+
+
 def count_phrases(text, phrases):
+    """Count occurrences of phrases in text using pre-compiled regex patterns."""
     if not isinstance(text, str):
         return 0
     total = 0
     for kw in phrases:
-        total += len(re.findall(r"\b" + re.escape(kw) + r"\b", text, re.IGNORECASE))
+        pattern = _get_compiled_pattern(kw)
+        total += len(pattern.findall(text))
     return total
 
 
 @st.cache_data
 def article_frequency(df, article_dict, groupby=None):
+    """Highly optimized article frequency calculation using word boundaries and case-insensitive matching."""
+    # Pre-process: lowercase all text once for case-insensitive matching
+    # This avoids repeated regex operations
+    
     rows = []
     iterable = [(None, df)] if not groupby else df.groupby(groupby)
+    
     for g, sub in iterable:
-        for art, kws in article_dict.items():
-            c = sub["clean_text"].apply(lambda t: count_phrases(t, kws)).sum()
-            rows.append({"group": ("All" if g is None else g), "article": art, "count": int(c)})
+        # Initialize counters for all articles
+        article_counts = {art: 0 for art in article_dict.keys()}
+        
+        # Process each document once
+        for text in sub["clean_text"]:
+            if not isinstance(text, str):
+                continue
+            
+            # Lowercase once for case-insensitive matching
+            text_lower = text.lower()
+            
+            # Count matches for each article
+            for art, keywords in article_dict.items():
+                for kw in keywords:
+                    kw_lower = kw.lower()
+                    # Use word-boundary-aware regex for all phrases to avoid partial matches
+                    if ' ' in kw_lower:
+                        # Multi-word phrase - use cached regex pattern with word boundaries
+                        pattern = _get_compiled_pattern(kw)
+                        article_counts[art] += len(pattern.findall(text))
+                    else:
+                        # Single word - use word boundary check with regex (cached)
+                        pattern = _get_compiled_pattern(kw)
+                        article_counts[art] += len(pattern.findall(text))
+        
+        # Add non-zero counts to results
+        for art, count in article_counts.items():
+            if count > 0:
+                rows.append({
+                    "group": ("All" if g is None else g),
+                    "article": art,
+                    "count": count
+                })
+    
     out = pd.DataFrame(rows)
-    return out[out["count"] > 0].sort_values("count", ascending=False)
+    return out.sort_values("count", ascending=False) if len(out) > 0 else out
 
 
 @st.cache_data
-def keyword_counts(df, top_n=30):
+def keyword_counts(df, top_n=30, remove_stopwords=True, min_word_length=3):
+    """
+    Extract most frequent meaningful terms from documents.
+    
+    Args:
+        df: DataFrame with 'clean_text' column
+        top_n: Number of top terms to return
+        remove_stopwords: Whether to filter out common stopwords
+        min_word_length: Minimum word length to consider
+    
+    Returns:
+        DataFrame with columns ['term', 'freq'] sorted by frequency
+    """
     cnt = Counter()
-    for t in df["clean_text"].astype(str).tolist():
-        cnt.update(w for w in t.split() if 2 <= len(w) <= 25)
-    return pd.DataFrame(cnt.items(), columns=["term", "freq"]).sort_values("freq", ascending=False).head(top_n)
+    
+    for text in df["clean_text"].astype(str).tolist():
+        # Extract words using regex (handles punctuation better)
+        words = re.findall(r'\b[a-z]+\b', text.lower())
+        
+        # Filter words
+        filtered_words = [
+            w for w in words
+            if len(w) >= min_word_length  # Minimum length
+            and (not remove_stopwords or w not in ALL_STOPWORDS)  # Remove stopwords if enabled
+            and not w.isdigit()  # Remove pure numbers
+        ]
+        
+        cnt.update(filtered_words)
+    
+    return pd.DataFrame(
+        cnt.items(), 
+        columns=["term", "freq"]
+    ).sort_values("freq", ascending=False).head(top_n)
 
 
 @st.cache_data

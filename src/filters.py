@@ -19,6 +19,24 @@ def filter_df(df, region, country, doc_types, year_range):
 
 def render_sidebar(df_all, ARTICLE_PRESETS):
     """Render all sidebar widgets and return the filtered DataFrame."""
+    # Document type display mapping
+    DOC_TYPE_DISPLAY_MAP = {
+        "state report": "State Report",
+        "loi": "List of Issues (LOI)",
+        "written response": "Written Reply",
+        "concluding observations": "Concluding Observations",
+        "response to concluding observations": "Response to Concluding Observations"
+    }
+    
+    # Custom order for document types (following UN reporting cycle)
+    DOC_TYPE_ORDER = [
+        "state report",
+        "loi",
+        "written response",
+        "concluding observations",
+        "response to concluding observations"
+    ]
+    
     st.sidebar.markdown("### \U0001f50d Global Filters")
     st.sidebar.caption("Applied across Explore and Analyze tabs")
 
@@ -30,10 +48,28 @@ def render_sidebar(df_all, ARTICLE_PRESETS):
     )
     country = st.sidebar.selectbox("Country", countries, index=0)
 
-    doc_types_all = sorted(df_all["doc_type"].unique())
-    default_doc_types = [dt for dt in doc_types_all if "state" in dt.lower()]
-    doc_types = st.sidebar.multiselect("Document Type", doc_types_all, default=default_doc_types)
+    # Get unique document types from data
+    doc_types_raw = df_all["doc_type"].unique()
+    
+    # Order document types according to custom order
+    doc_types_ordered = [dt for dt in DOC_TYPE_ORDER if dt in doc_types_raw]
+    
+    # Map to display names
+    doc_types_display = [DOC_TYPE_DISPLAY_MAP.get(dt, dt.title()) for dt in doc_types_ordered]
+    
+    # Set default selection (State Report)
+    default_display = [DOC_TYPE_DISPLAY_MAP.get(dt, dt.title()) for dt in doc_types_ordered if "state" in dt.lower()]
+    
+    # Create multiselect with display names
+    selected_display = st.sidebar.multiselect("Document Type", doc_types_display, default=default_display)
+    
+    # Map selected display names back to original values for filtering
+    reverse_map = {v: k for k, v in DOC_TYPE_DISPLAY_MAP.items()}
+    doc_types = [reverse_map.get(dt, dt.lower()) for dt in selected_display]
 
+    # Warn the user if no document types are selected
+    if not selected_display:
+        st.sidebar.warning("No document types selected. Select at least one document type to see results.")
     if "year" in df_all.columns:
         ymin, ymax = int(df_all["year"].min()), int(df_all["year"].max())
         year_range = st.sidebar.slider("Year Range", ymin, ymax, (ymin, ymax))
@@ -69,18 +105,5 @@ def render_sidebar(df_all, ARTICLE_PRESETS):
 
     st.sidebar.markdown("---")
     st.sidebar.caption(f"**Filtered Results:** {len(df):,} of {len(df_all):,} documents")
-
-    export_cols = ["country", "year", "doc_type", "region"]
-    if "word_count" in df.columns:
-        export_cols.append("word_count")
-    if "text_snippet" in df.columns:
-        export_cols.append("text_snippet")
-    st.sidebar.download_button(
-        label="\u2b07\ufe0f Download Filtered Data (CSV)",
-        data=df[export_cols].to_csv(index=False).encode("utf-8"),
-        file_name="crpd_filtered_data.csv",
-        mime="text/csv",
-        use_container_width=True
-    )
 
     return df
