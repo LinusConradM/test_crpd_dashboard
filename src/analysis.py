@@ -207,6 +207,146 @@ def tfidf_by_doc_type(df, top_n=20):
 
 
 @st.cache_data
+def extract_ngrams(df, n=2, top_n=20, min_freq=5, remove_stopwords=True):
+    """
+    Extract most frequent n-grams from documents.
+    
+    Args:
+        df: DataFrame with 'clean_text' column
+        n: N-gram size (2 for bi-grams, 3 for tri-grams)
+        top_n: Number of top n-grams to return
+        min_freq: Minimum document frequency
+        remove_stopwords: Whether to filter stopwords
+    
+    Returns:
+        DataFrame with columns ['phrase', 'freq']
+    """
+    from sklearn.feature_extraction.text import CountVectorizer
+    
+    # Configure vectorizer
+    stop_words = list(ALL_STOPWORDS) if remove_stopwords else None
+    vectorizer = CountVectorizer(
+        ngram_range=(n, n),
+        stop_words=stop_words,
+        min_df=min_freq,
+        max_df=0.8,  # Ignore phrases in >80% of documents
+        lowercase=True
+    )
+    
+    # Extract n-grams
+    texts = df['clean_text'].dropna().astype(str).tolist()
+    # If there are fewer documents than the minimum frequency threshold,
+    # no n-grams can satisfy min_df, so return an empty result.
+    if len(texts) < min_freq:
+        return pd.DataFrame(columns=['phrase', 'freq'])
+    
+    X = vectorizer.fit_transform(texts)
+    
+    # Get frequencies
+    phrases = vectorizer.get_feature_names_out()
+    freqs = X.sum(axis=0).A1
+    
+    # Create DataFrame and sort
+    ngram_df = pd.DataFrame({
+        'phrase': phrases,
+        'freq': freqs.astype(int)
+    }).sort_values('freq', ascending=False).head(top_n)
+    
+    return ngram_df
+
+
+@st.cache_data
+def extract_topics_lda(df, n_topics=5, n_words=10, remove_stopwords=True):
+    """
+    Extract topics using Latent Dirichlet Allocation (LDA).
+    
+    Args:
+        df: DataFrame with 'clean_text' column
+        n_topics: Number of topics to extract
+        n_words: Number of top words per topic
+        remove_stopwords: Whether to filter stopwords
+    
+    Returns:
+        Dictionary with topics, labels, and document-topic distribution
+    """
+    from sklearn.feature_extraction.text import CountVectorizer
+    from sklearn.decomposition import LatentDirichletAllocation
+    
+    # Configure vectorizer
+    stop_words = list(ALL_STOPWORDS) if remove_stopwords else None
+    vectorizer = CountVectorizer(
+        stop_words=stop_words,
+        min_df=5,  # Ignore terms in <5 documents
+    # Create list of document texts
+    texts = df['clean_text'].dropna().astype(str).tolist()
+    if len(texts) < n_topics:
+        # Not enough documents to extract the requested number of topics
+        return None
+    
+    # Configure vectorizer
+    stop_words = list(ALL_STOPWORDS) if remove_stopwords else None
+    # Use a dynamic min_df to avoid empty vocabularies on small datasets
+    min_df_dynamic = 1 if len(texts) < 5 else 5
+    vectorizer = CountVectorizer(
+        stop_words=stop_words,
+        min_df=min_df_dynamic,  # Ignore terms in <min_df_dynamic documents
+        max_df=0.7,  # Ignore terms in >70% of documents
+        lowercase=True,
+        max_features=1000  # Limit vocabulary size
+    )
+    
+    # Create document-term matrix
+    try:
+        X = vectorizer.fit_transform(texts)
+    except ValueError:
+        # This typically indicates an empty vocabulary (e.g., after stopword removal)
+        return None
+    
+    # Apply LDA
+    lda = LatentDirichletAllocation(
+        n_components=n_topics,
+        random_state=42,
+        max_iter=20,
+        learning_method='online'
+    )
+    doc_topic_dist = lda.fit_transform(X)
+    
+    # Extract top words per topic
+    feature_names = vectorizer.get_feature_names_out()
+    topics = []
+    for topic_idx, topic in enumerate(lda.components_):
+        top_indices = topic.argsort()[-n_words:][::-1]
+        top_words = [feature_names[i] for i in top_indices]
+        top_weights = [float(topic[i]) for i in top_indices]
+        topics.append({
+            'topic_id': topic_idx,
+            'words': top_words,
+            'weights': top_weights
+        })
+    
+    # Generate topic labels (simple heuristic: top 3 words)
+    topic_labels = [
+        f"Topic {i+1}: {', '.join(t['words'][:3])}"
+        for i, t in enumerate(topics)
+    ]
+    
+    # Calculate topic prevalence (% of documents where topic is dominant)
+    dominant_topics = doc_topic_dist.argmax(axis=1)
+    topic_prevalence = [
+        (dominant_topics == i).sum() / len(dominant_topics) * 100
+        for i in range(n_topics)
+    ]
+    
+    return {
+        'topics': topics,
+        'topic_labels': topic_labels,
+        'topic_prevalence': topic_prevalence,
+        'doc_topic_dist': doc_topic_dist,
+        'feature_names': feature_names
+    }
+
+
+@st.cache_data
 def model_shift_table(df):
     rows = []
     for _, r in df.iterrows():

@@ -9,6 +9,7 @@ from src.analysis import (
     keyword_counts,
     model_shift_table,
     tfidf_by_doc_type,
+    extract_ngrams,
 )
 
 
@@ -53,19 +54,105 @@ def render(df, ARTICLE_PRESETS):
     elif analysis_type == "Keywords & Topics":
         st.subheader("💬 Keyword & Topic Analysis")
 
+        # Row 1: Single words
         col1, col2 = st.columns(2)
 
         with col1:
             st.markdown("#### Most Frequent Terms")
             freq_df = keyword_counts(df, top_n=20)
-            fig = px.bar(freq_df.sort_values("freq"), x="freq", y="term", orientation="h")
+            fig = px.bar(freq_df.sort_values("freq"), x="freq", y="term", orientation="h",
+                        labels={"freq": "Frequency", "term": "Term"})
+            fig.update_layout(
+                height=500,
+                yaxis={'categoryorder': 'total ascending'},
+                margin=dict(l=20, r=20, t=40, b=20),
+                yaxis_title=None
+            )
+            fig.update_yaxes(automargin=True)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
             st.markdown("#### Distinctive Terms by Document Type")
             tfidf_df = tfidf_by_doc_type(df, top_n=15)
-            fig = px.bar(tfidf_df, x="score", y="term", color="doc_type", orientation="h")
+            fig = px.bar(tfidf_df, x="score", y="term", color="doc_type", orientation="h",
+                        labels={"score": "TF-IDF Score", "term": "Term", "doc_type": "Document Type"})
+            fig.update_layout(
+                height=500,
+                margin=dict(l=20, r=20, t=40, b=20),
+                yaxis_title=None
+            )
+            fig.update_yaxes(automargin=True)
             st.plotly_chart(fig, use_container_width=True)
+
+        # Row 2: Phrases
+        st.markdown("#### Phrase Extraction Settings")
+        settings_col1, settings_col2 = st.columns([2, 1])
+        with settings_col1:
+            enable_phrases = st.checkbox("Enable phrase extraction", value=True)
+        with settings_col2:
+            min_freq = st.number_input(
+                "Min phrase frequency",
+                min_value=1,
+                max_value=100,
+                value=5,
+                step=1,
+            )
+
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Common 2-Word Phrases")
+            if enable_phrases:
+                with st.spinner("Extracting phrases..."):
+                    bigram_df = extract_ngrams(df, n=2, top_n=20, min_freq=min_freq)
+
+                if not bigram_df.empty:
+                    fig = px.bar(
+                        bigram_df.sort_values("freq"),
+                        x="freq",
+                        y="phrase",
+                        orientation="h",
+                        labels={"freq": "Frequency", "phrase": "Phrase"},
+                    )
+                    fig.update_layout(
+                        height=500,
+                        yaxis={"categoryorder": "total ascending"},
+                        margin=dict(l=20, r=20, t=40, b=20),
+                        yaxis_title=None,
+                    )
+                    fig.update_yaxes(automargin=True)
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No phrases found with current filters.")
+            else:
+                st.info("Enable phrase extraction to view common 2-word phrases.")
+
+        with col2:
+            st.markdown("#### Common 3-Word Phrases")
+            if enable_phrases:
+                with st.spinner("Extracting phrases..."):
+                    trigram_df = extract_ngrams(df, n=3, top_n=20, min_freq=min_freq)
+
+                if not trigram_df.empty:
+                    fig = px.bar(
+                        trigram_df.sort_values("freq"),
+                        x="freq",
+                        y="phrase",
+                        orientation="h",
+                        labels={"freq": "Frequency", "phrase": "Phrase"},
+                    )
+                    fig.update_layout(
+                        height=500,
+                        yaxis={"categoryorder": "total ascending"},
+                        margin=dict(l=20, r=20, t=40, b=20),
+                        yaxis_title=None,
+                    )
+                    fig.update_yaxes(automargin=True)
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No phrases found with current filters.")
+            else:
+                st.info("Enable phrase extraction to view common 3-word phrases.")
 
     # Comparative Analysis
     elif analysis_type == "Comparative Analysis":
