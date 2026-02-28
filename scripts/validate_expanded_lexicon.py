@@ -117,11 +117,21 @@ def compare_lexicons(df):
     print("\nOVERALL TERM COUNTS:")
     print(f"  Old Medical Model: {old_medical_total:,}")
     print(f"  New Medical Model: {new_medical_total:,}")
-    print(f"  Change: +{new_medical_total - old_medical_total:,} ({((new_medical_total/old_medical_total - 1) * 100):.1f}%)")
+    if old_medical_total == 0:
+        medical_pct_change_str = "N/A (old total is 0)"
+    else:
+        medical_pct_change = (new_medical_total / old_medical_total - 1) * 100
+        medical_pct_change_str = f"{medical_pct_change:.1f}%"
+    print(f"  Change: +{new_medical_total - old_medical_total:,} ({medical_pct_change_str})")
     print()
     print(f"  Old Rights-Based Model: {old_rights_total:,}")
     print(f"  New Rights-Based Model: {new_rights_total:,}")
-    print(f"  Change: +{new_rights_total - old_rights_total:,} ({((new_rights_total/old_rights_total - 1) * 100):.1f}%)")
+    if old_rights_total == 0:
+        rights_pct_change_str = "N/A (old total is 0)"
+    else:
+        rights_pct_change = (new_rights_total / old_rights_total - 1) * 100
+        rights_pct_change_str = f"{rights_pct_change:.1f}%"
+    print(f"  Change: +{new_rights_total - old_rights_total:,} ({rights_pct_change_str})")
     
     # Rights-based percentage
     old_overall_rights_pct = calculate_rights_percentage(old_medical_total, old_rights_total)
@@ -177,12 +187,22 @@ def show_new_terms():
 
 def analyze_sample_documents(df, n_samples=5):
     """Analyze sample documents to show before/after differences."""
+    # Handle empty or missing corpus gracefully
+    if df is None or len(df) == 0:
+        print("\n" + "=" * 80)
+        print("SAMPLE DOCUMENT ANALYSIS (n=0)")
+        print("=" * 80)
+        print("\nNo documents available for sample analysis.")
+        return
+
+    actual_n = min(n_samples, len(df))
+
     print("\n" + "=" * 80)
-    print(f"SAMPLE DOCUMENT ANALYSIS (n={n_samples})")
+    print(f"SAMPLE DOCUMENT ANALYSIS (n={actual_n})")
     print("=" * 80)
     
     # Select random sample
-    sample_df = df.sample(n=n_samples, random_state=42)
+    sample_df = df.sample(n=actual_n, random_state=42)
     
     for idx, row in sample_df.iterrows():
         text = str(row.get('clean_text', ''))

@@ -11,7 +11,7 @@ This script analyzes the current MODEL_DICT lexicon to:
 
 import pandas as pd
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 import sys
 import os
 
@@ -117,11 +117,17 @@ def calculate_document_coverage(df):
         else:
             neither_docs.add(idx)
     
-    total_docs = len(df)
-    print(f"\nDocuments with Medical Model terms only: {len(medical_docs)} ({len(medical_docs)/total_docs*100:.1f}%)")
-    print(f"Documents with Rights-Based Model terms only: {len(rights_docs)} ({len(rights_docs)/total_docs*100:.1f}%)")
-    print(f"Documents with BOTH model terms: {len(both_docs)} ({len(both_docs)/total_docs*100:.1f}%)")
-    print(f"Documents with NEITHER model terms: {len(neither_docs)} ({len(neither_docs)/total_docs*100:.1f}%)")
+    # Only count documents that were actually processed (non-empty clean_text)
+    processed_doc_ids = medical_docs | rights_docs | both_docs | neither_docs
+    total_docs = len(processed_doc_ids)
+    
+    if total_docs == 0:
+        print("\nNo documents with non-empty 'clean_text' found; coverage statistics not computed.")
+    else:
+        print(f"\nDocuments with Medical Model terms only: {len(medical_docs)} ({len(medical_docs)/total_docs*100:.1f}%)")
+        print(f"Documents with Rights-Based Model terms only: {len(rights_docs)} ({len(rights_docs)/total_docs*100:.1f}%)")
+        print(f"Documents with BOTH model terms: {len(both_docs)} ({len(both_docs)/total_docs*100:.1f}%)")
+        print(f"Documents with NEITHER model terms: {len(neither_docs)} ({len(neither_docs)/total_docs*100:.1f}%)")
     
     return {
         'medical_only': medical_docs,
