@@ -55,9 +55,7 @@ jobs:
                   data/faiss_index.bin \
                   data/embeddings.npy \
                   data/chunks_metadata.json \
-                  LLM_Development/sync_log.json \
-                  data/markdown/ \
-                  data/pdfs/ || true
+                  LLM_Development/sync_log.json || true
           git diff --staged --quiet || \
             git commit -m "chore: auto-sync new CRPD documents $(date +'%Y-%m-%d')"
           git push
