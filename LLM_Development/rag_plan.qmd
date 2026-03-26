@@ -1,0 +1,381 @@
+---
+title: "RAG & AI Chat Implementation Plan"
+subtitle: "A Standard Guide for Building Retrieval Augmented Generation Systems"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    theme: cosmo
+    code-fold: true
+    highlight-style: github
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+---
+
+## Overview
+
+This document outlines a phased approach to building a production-grade RAG (Retrieval Augmented Generation) system with an AI chat interface. The plan progresses from basic document ingestion through advanced retrieval techniques and systematic evaluation.
+
+```{mermaid}
+flowchart LR
+    A[Documents] --> B[Chunking]
+    B --> C[Embeddings]
+    C --> D[Vector Store]
+    D --> E[Retriever]
+    E --> F[LLM]
+    F --> G[Answer]
+    style A fill:#f9f,stroke:#333
+    style G fill:#9f9,stroke:#333
+```
+
+## Phase 1: Data Preparation & Knowledge Base
+
+**Goal:** Curate and structure the documents your RAG system will retrieve from.
+
+### Steps
+
+1. **Gather source documents** --- Collect all relevant text files, PDFs, or structured data into a `knowledge_base/` directory.
+2. **Document loading** --- Use LangChain's `DirectoryLoader` with `TextLoader` to ingest files.
+3. **Chunking strategy** --- Split documents with `RecursiveCharacterTextSplitter`.
+4. **Token counting** --- Use `tiktoken` to estimate costs before embedding.
+
+### Chunking Configuration
+
+```{python}
+#| eval: false
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=1000,
+    chunk_overlap=200
+)
+chunks = text_splitter.split_documents(documents)
+```
+
+::: {.callout-tip}
+Overlap (200 chars) prevents losing context at chunk boundaries. A 20% overlap ratio is a solid default.
+:::
+
+### Libraries
+
+| Library | Purpose |
+|---------|---------|
+| `langchain` | Document loading framework |
+| `langchain-text-splitters` | Chunking strategies |
+| `tiktoken` | Token counting for cost estimation |
+
+## Phase 2: Embeddings & Vector Store
+
+**Goal:** Convert text chunks into vectors and store them for fast similarity search.
+
+### Embedding Model Options
+
+| Model | Dimensions | Cost | Quality |
+|-------|-----------|------|---------|
+| HuggingFace `all-MiniLM-L6-v2` | 384 | Free | Good |
+| OpenAI `text-embedding-3-small` | 1536 | Low | Better |
+| OpenAI `text-embedding-3-large` | 3072 | Medium | Best |
+
+### Vector Store Setup
+
+```{python}
+#| eval: false
+from langchain_chroma import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
+
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
+vectorstore = Chroma.from_documents(
+    documents=chunks,
+    embedding=embeddings,
+    persist_directory="chroma_db"
+)
+```
+
+### Verification
+
+Visualize embeddings with t-SNE (2D/3D) to confirm semantic clustering before proceeding.
+
+```{python}
+#| eval: false
+from sklearn.manifold import TSNE
+import plotly.express as px
+
+tsne = TSNE(n_components=2, random_state=42)
+reduced = tsne.fit_transform(vectors)
+fig = px.scatter(x=reduced[:, 0], y=reduced[:, 1], color=labels)
+fig.show()
+```
+
+### Libraries
+
+| Library | Purpose |
+|---------|---------|
+| `langchain-chroma` | Vector store integration |
+| `chromadb` | Persistent vector database |
+| `langchain-openai` / `langchain-huggingface` | Embedding models |
+
+## Phase 3: Basic RAG Pipeline
+
+**Goal:** Wire retrieval + LLM generation into a working Q&A system.
+
+### Architecture
+
+```{mermaid}
+flowchart TD
+    Q[User Question] --> R[Retriever k=10]
+    R --> C[Context Builder]
+    H[Chat History] --> C
+    C --> S[System Prompt + Context]
+    S --> LLM[ChatOpenAI temp=0]
+    LLM --> A[Answer + Sources]
+```
+
+### Implementation
+
+```{python}
+#| eval: false
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import SystemMessage, HumanMessage
+
+# Set up retriever
+retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
+
+# Configure LLM
+llm = ChatOpenAI(temperature=0, model_name="gpt-4.1-nano")
+
+def chat(question: str, history: list) -> tuple[str, list]:
+    # Retrieve relevant context
+    docs = retriever.invoke(question)
+    context = "\n\n".join(doc.page_content for doc in docs)
+
+    # Build messages
+    system_prompt = f"""You are an expert assistant.
+    Use the following context to answer:
+    {context}"""
+
+    messages = [SystemMessage(content=system_prompt)]
+    messages.extend(history)
+    messages.append(HumanMessage(content=question))
+
+    # Generate answer
+    response = llm.invoke(messages)
+    return response.content, docs
+```
+
+::: {.callout-important}
+Use `temperature=0` for deterministic, factual answers in RAG systems. Higher temperatures introduce hallucination risk.
+:::
+
+### Libraries
+
+| Library | Purpose |
+|---------|---------|
+| `langchain-openai` | LLM interface |
+| `litellm` | Multi-provider unified API |
+
+## Phase 4: Chat Interface
+
+**Goal:** Expose the RAG pipeline via an interactive UI.
+
+### Gradio Implementation
+
+```{python}
+#| eval: false
+import gradio as gr
+
+with gr.Blocks() as demo:
+    with gr.Row():
+        with gr.Column(scale=2):
+            chatbot = gr.ChatInterface(
+                fn=chat,
+                title="RAG Assistant",
+                description="Ask questions about the knowledge base"
+            )
+        with gr.Column(scale=1):
+            context_display = gr.Textbox(
+                label="Retrieved Sources",
+                lines=20,
+                interactive=False
+            )
+
+demo.launch()
+```
+
+### UI Requirements
+
+- **Two-panel layout** --- Chat on the left, retrieved context/sources on the right
+- **Source attribution** --- Show which documents contributed to each answer
+- **Streaming** --- Stream LLM responses for better UX
+
+### Libraries
+
+| Library | Purpose |
+|---------|---------|
+| `gradio>=5` | Rapid UI prototyping |
+
+## Phase 5: Advanced RAG Techniques
+
+**Goal:** Improve retrieval quality and answer accuracy.
+
+### 5.1 Document Preprocessing
+
+Use an LLM to enrich each chunk with structured metadata:
+
+```{python}
+#| eval: false
+from pydantic import BaseModel
+
+class Chunk(BaseModel):
+    headline: str    # improves query matching
+    summary: str     # quick understanding
+    original_text: str  # full content
+```
+
+### 5.2 Query Rewriting
+
+The LLM reformulates the user question for better retrieval:
+
+```{python}
+#| eval: false
+def rewrite_query(original_query: str) -> str:
+    prompt = f"""Rewrite this question to improve search retrieval.
+    Return only the rewritten query.
+    Original: {original_query}"""
+    return llm.invoke(prompt).content
+```
+
+### 5.3 Reranking
+
+After retrieval, the LLM reorders results by true relevance:
+
+```{python}
+#| eval: false
+def rerank(query: str, docs: list) -> list:
+    prompt = f"""Given the query: {query}
+    Rank these documents by relevance (return indices):
+    {format_docs(docs)}"""
+    ranked_indices = llm.invoke(prompt).content
+    return [docs[i] for i in parse_indices(ranked_indices)]
+```
+
+### 5.4 Multi-Pass Retrieval
+
+Run multiple query variants and merge/deduplicate results for higher recall.
+
+### Advanced Pipeline
+
+```{mermaid}
+flowchart TD
+    Q[User Question] --> QR[Query Rewriting]
+    QR --> R1[Retrieval Pass 1]
+    QR --> R2[Retrieval Pass 2]
+    R1 --> M[Merge & Deduplicate]
+    R2 --> M
+    M --> RR[Reranking]
+    RR --> LLM[LLM Generation]
+    LLM --> A[Answer]
+```
+
+### Libraries
+
+| Library | Purpose |
+|---------|---------|
+| `pydantic` | Structured outputs and validation |
+| `litellm` | Batch processing across providers |
+| `numpy` | Vector operations |
+
+## Phase 6: Evaluation Framework
+
+**Goal:** Measure and iterate on RAG quality systematically.
+
+### 6.1 Test Set Design
+
+Build questions across categories:
+
+| Category | Count | Description |
+|----------|-------|-------------|
+| `direct_fact` | 70 | Single-fact lookup |
+| `temporal` | 20 | Time-based questions |
+| `spanning` | 20 | Multi-document answers |
+| `comparative` | 10 | Compare entities |
+| `numerical` | 10 | Number-based answers |
+| `relationship` | 10 | Entity relationships |
+| `holistic` | 10 | Broad understanding |
+
+### 6.2 Retrieval Metrics
+
+| Metric | What It Measures | Target |
+|--------|-----------------|--------|
+| **MRR** (Mean Reciprocal Rank) | How quickly the right doc appears | > 0.7 |
+| **nDCG** (Normalized Discounted Cumulative Gain) | Overall ranking quality | > 0.8 |
+| **Keyword Coverage** | Expected terms in retrieved docs | > 0.6 |
+
+### 6.3 Answer Quality Metrics (LLM-as-a-Judge)
+
+Score each answer 1--5 on:
+
+- **Accuracy** --- Is the answer factually correct?
+- **Completeness** --- Does it cover all aspects of the question?
+- **Relevance** --- Does it directly address what was asked?
+
+### 6.4 Evaluation Dashboard
+
+Build a Gradio-based evaluator with:
+
+- Color-coded metrics (green/orange/red)
+- Per-category breakdowns
+- Bar charts for metric comparison
+
+## Phase 7: Production Considerations
+
+### Cost Optimization
+
+| Strategy | Impact |
+|----------|--------|
+| HuggingFace embeddings (free tier) | Eliminates embedding costs |
+| `gpt-4.1-nano` for inference | < $1/1M tokens |
+| Batch processing with `multiprocessing.Pool` | Faster ingestion |
+| Local deployment via Ollama | Zero API costs |
+
+### Reliability
+
+- **Retry logic** with exponential backoff for API calls
+- **Persistent vector store** (don't re-embed on restart)
+- **Error handling** at system boundaries
+
+### Extensibility
+
+- **Agentic patterns** with tool use for complex workflows
+- **Human-in-the-loop** review for high-stakes answers
+
+## Quick-Start Dependencies
+
+```{.bash}
+pip install \
+    langchain langchain-openai langchain-chroma langchain-text-splitters \
+    chromadb \
+    gradio>=5 \
+    litellm \
+    pydantic \
+    tiktoken \
+    numpy plotly scikit-learn
+```
+
+## Recommended Build Order
+
+| Day | Phase | Deliverable |
+|-----|-------|-------------|
+| 1 | Data Prep + Embeddings | Chunked docs in Chroma |
+| 2 | Basic RAG + Chat UI | Working Gradio chatbot |
+| 3 | Manual testing + Eval test set | JSONL test file |
+| 4 | Query rewriting + Reranking | Advanced pipeline |
+| 5 | Evaluation + Iteration | Metrics dashboard |
+
+::: {.callout-note}
+This plan follows a progressive approach: start with the simplest working RAG, measure it, then layer on advanced techniques only where the metrics show room for improvement.
+:::

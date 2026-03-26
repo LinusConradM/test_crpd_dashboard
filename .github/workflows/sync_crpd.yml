@@ -1,0 +1,63 @@
+name: Sync New CRPD Documents
+
+# Runs automatically on the 1st of every month at 6 AM UTC
+# Can also be triggered manually from the GitHub Actions tab
+on:
+  schedule:
+    - cron: '0 6 1 * *'
+  workflow_dispatch:        # allows manual trigger from GitHub UI
+    inputs:
+      dry_run:
+        description: 'Dry run only (no downloads)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # needed to commit updated CSV and index files
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-sync-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          pip install requests pandas pymupdf4llm sentence-transformers faiss-cpu
+
+      - name: Run sync (dry run)
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        run: python LLM_Development/sync_new_documents.py --dry-run
+
+      - name: Run full sync
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: python LLM_Development/sync_new_documents.py
+
+      - name: Commit updated data files
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/crpd_reports.csv \
+                  data/faiss_index.bin \
+                  data/embeddings.npy \
+                  data/chunks_metadata.json \
+                  LLM_Development/sync_log.json \
+                  data/markdown/ \
+                  data/pdfs/ || true
+          git diff --staged --quiet || \
+            git commit -m "chore: auto-sync new CRPD documents $(date +'%Y-%m-%d')"
+          git push

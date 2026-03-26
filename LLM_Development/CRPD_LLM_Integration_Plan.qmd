@@ -1,0 +1,1104 @@
+---
+title: "LLM Integration Plan"
+subtitle: "CRPD Disability Rights Data Dashboard"
+author:
+  - name: "Institute on Disability and Public Policy (IDPP)"
+    affiliation: "American University"
+date: today
+date-format: "MMMM D, YYYY"
+
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    toc-title: "Contents"
+    toc-expand: 2
+    number-sections: true
+    theme: [cosmo, custom.scss]
+    highlight-style: github
+    code-fold: show
+    code-copy: true
+    code-overflow: wrap
+    embed-resources: true
+    smooth-scroll: true
+    fig-align: center
+    link-external-icon: true
+    link-external-newwindow: true
+    callout-appearance: simple
+    page-layout: article
+
+execute:
+  echo: true
+  eval: false
+  warning: false
+
+---
+
+```{=html}
+<style>
+  body { font-family: "Inter", "Helvetica Neue", sans-serif; }
+  h1, h2, h3 { font-weight: 700; }
+  .callout { border-radius: 6px; }
+  table { font-size: 0.9em; }
+  thead { background-color: #f0f4ff; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 600;
+  }
+  .badge-green  { background: #d1fae5; color: #065f46; }
+  .badge-blue   { background: #dbeafe; color: #1e40af; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .pipeline-step {
+    border-left: 4px solid #667eea;
+    padding: 0.6rem 1rem;
+    margin: 0.5rem 0;
+    background: #f8f9ff;
+    border-radius: 0 6px 6px 0;
+  }
+</style>
+```
+
+---
+
+# Executive Summary {.unnumbered}
+
+This document defines the complete technical strategy for integrating Large Language Models
+(LLMs) into the CRPD Disability Rights Data Dashboard. The dashboard currently serves
+researchers, policymakers, and disability rights advocates by surfacing patterns across
+**585 documents from 155 countries (2010–2026)** using rule-based keyword analytics.
+
+LLM integration will transform the platform from a *data viewer* into a *research assistant*
+— enabling natural language queries, document-grounded answers, AI-generated policy briefs,
+and semantic search.
+
+::: {.callout-important}
+## Critical Pre-Condition
+
+The existing `clean_text` column in `crpd_reports.csv` has all punctuation stripped and all
+text lowercased — it was designed for regex keyword matching, not LLM input. **The original
+PDF source files must be re-processed** through a proper conversion pipeline before LLM
+integration can proceed.
+:::
+
+## Chosen Approach
+
+The full pipeline, run **once offline**, produces a lightweight search index that powers all
+user-facing LLM features:
+
+<div class="pipeline-step">📥 <strong>Step 1 — Collect</strong> &nbsp; Download 585 PDFs from UN Treaty Body Database</div>
+<div class="pipeline-step">📄 <strong>Step 2 — Convert</strong> &nbsp; PDF → structured Markdown (pymupdf4llm)</div>
+<div class="pipeline-step">✂️ <strong>Step 3 — Chunk</strong> &nbsp; Split documents into ~500-word semantic segments</div>
+<div class="pipeline-step">🔢 <strong>Step 4 — Embed</strong> &nbsp; Vectorize chunks (sentence-transformers, free, local)</div>
+<div class="pipeline-step">🗃️ <strong>Step 5 — Index</strong> &nbsp; Store in FAISS for millisecond retrieval</div>
+<div class="pipeline-step">💬 <strong>Step 6 — Query</strong> &nbsp; RAG: retrieve relevant chunks → answer with Ollama llama3 / Groq llama-3.3-70b-versatile</div>
+
+---
+
+# Project Context
+
+## Current Dashboard
+
+The CRPD Disability Rights Data Dashboard is a **Streamlit** application deployed on Posit
+Cloud ([idpp.connect.posit.cloud/crpd-dashboard](https://idpp.connect.posit.cloud/crpd-dashboard)).
+
+### Analytics Stack & Limitations
+
+| Component | Current Technology | Limitation |
+|-----------|------------------|------------|
+| Text matching | Regex + word boundaries | Exact match only; misses synonyms |
+| Article frequency | Keyword counting | No semantic understanding |
+| Topic modeling | LDA (scikit-learn) | No interpretable labels |
+| Classification | Hardcoded lexicons | Binary; no nuance or context |
+| Document search | String `contains` | No semantic similarity |
+
+### Corpus Statistics
+
+| Metric | Value |
+|--------|-------|
+| Total documents | 585 |
+| Countries covered | 155 |
+| Temporal range | 2010 – 2026 |
+| Language | English (all documents) |
+| Average document length | 11,071 words |
+| Longest document | 69,735 words |
+| Document types | 5 (State Reports, LOI, Written Replies, Concluding Observations, Responses) |
+
+## What LLM Integration Adds
+
+| New Capability | User Benefit |
+|----------------|-------------|
+| Natural language Q&A | Ask questions in plain English; receive grounded answers |
+| Semantic search | Find relevant documents beyond exact keyword matching |
+| AI narrative summaries | Plain-English explanation of any filtered view |
+| Policy brief generation | One-click downloadable research briefs |
+| Document-grounded RAG | Answers citing specific countries, years, and document types |
+
+---
+
+# System Architecture
+
+## Full Pipeline Diagram
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║                  OFFLINE  (run once, ~30 minutes)               ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                  ║
+║  UN Digital Library API                                          ║
+║  digitallibrary.un.org  ──────────────────────────────────────► ║
+║                                                                  ║
+║  download_pdfs.py        sync_new_documents.py                   ║
+║  (initial 585 PDFs)      (monthly auto-update)                   ║
+║         │                        │                               ║
+║         └──────────┬─────────────┘                               ║
+║                    ▼                                             ║
+║            data/pdfs/   (585 PDF files)                          ║
+║                    │                                             ║
+║                    ▼  pymupdf4llm                                ║
+║            data/markdown/   (585 .md files)                      ║
+║                    │                                             ║
+║                    ▼  chunk_by_section()                         ║
+║            ~15,000 chunks  (500 words / 75-word overlap)         ║
+║                    │                                             ║
+║                    ▼  sentence-transformers                      ║
+║            data/embeddings.npy   (15000 × 768 float32)           ║
+║                    │                                             ║
+║                    ▼  FAISS IndexFlatIP                          ║
+║            data/faiss_index.bin  (~20 MB)                        ║
+║            data/chunks_metadata.json                             ║
+╚══════════════════════════════════════════════════════════════════╝
+                         │
+                committed to repo / Posit Cloud
+                         │
+╔══════════════════════════════════════════════════════════════════╗
+║                  ONLINE  (per user request)                     ║
+╠══════════════════════════════════════════════════════════════════╣
+║                                                                  ║
+║  User types question in Streamlit chat                           ║
+║         │                                                        ║
+║         ▼  sentence-transformers (local, free)                   ║
+║  Question embedding (768-dim vector)                             ║
+║         │                                                        ║
+║         ▼  FAISS nearest-neighbor search  (<5 ms)               ║
+║  Top 6–8 relevant document chunks                                ║
+║         │                                                        ║
+║         ▼  Build prompt                                          ║
+║  [system prompt] + [data context] + [retrieved chunks]           ║
+║         │                                                        ║
+║         ▼  Ollama llama3 (local) / Groq llama-3.3-70b-versatile   ║
+║  Grounded answer with citations                                  ║
+║  (country, year, document type)                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+## Repository Structure
+
+```
+crpd-dashboard/
+├── app.py
+├── requirements.txt                  ← add 4 packages
+├── .streamlit/
+│   └── secrets.toml                  ← GROQ_API_KEY (git-ignored)
+├── data/
+│   ├── crpd_reports.csv              ← existing
+│   ├── pdfs/                         ← NEW: 585 source PDFs
+│   ├── markdown/                     ← NEW: 585 converted .md files
+│   ├── embeddings.npy                ← NEW: ~25 MB
+│   ├── faiss_index.bin               ← NEW: ~20 MB
+│   └── chunks_metadata.json          ← NEW: chunk text + metadata
+├── LLM_Development/
+│   ├── CRPD_LLM_Integration_Plan.qmd ← this document
+│   ├── download_pdfs.py              ← initial PDF collection
+│   ├── sync_new_documents.py         ← monthly auto-sync
+│   └── build_knowledge_base.py       ← PDF → index pipeline
+├── .github/
+│   └── workflows/
+│       └── sync_crpd.yml             ← GitHub Actions monthly schedule
+└── src/
+    ├── llm.py                        ← NEW: all LLM/RAG logic
+    ├── tab_chat.py                   ← NEW: AI Research Assistant standalone page (page == "chat")
+    ├── tab_analyze.py                ← unmodified for chat; still hosts Article Coverage, Model Shift, etc.
+    ├── tab_overview.py               ← modified: AI Insights panel
+    └── tab_explore.py                ← modified: Report generation (Phase 4)
+```
+
+---
+
+# Step 1 — Document Collection
+
+## Data Source
+
+All 585 documents originate from the **UN Treaty Body Database**
+([tbinternet.ohchr.org](https://tbinternet.ohchr.org)). Every document is publicly available
+with no login required.
+
+::: {.callout-note}
+## No Official API Exists
+
+The UN Treaty Body Database (`tbinternet.ohchr.org`) has no public API, RSS feed, or bulk
+download endpoint. However, two mechanisms make automated collection possible without
+web scraping.
+:::
+
+## Mechanism 1 — Direct Download by Symbol
+
+Every document in `crpd_reports.csv` has a `symbol` column (e.g., `CRPD_C_ITA_1`).
+The UN download server accepts these symbols directly via URL:
+
+```
+https://tbinternet.ohchr.org/_layouts/treatybodyexternal/Download.aspx
+  ?symbolno=CRPD%2FC%2FITA%2F1&Lang=en
+```
+
+Conversion from CSV symbol to URL is straightforward:
+
+```python
+def symbol_to_url(symbol: str) -> str:
+    # CRPD_C_ITA_1  →  CRPD/C/ITA/1  →  CRPD%2FC%2FITA%2F1
+    slash_form = symbol.replace("_", "/")
+    encoded    = slash_form.replace("/", "%2F")
+    return f"https://tbinternet.ohchr.org/_layouts/treatybodyexternal/Download.aspx?symbolno={encoded}&Lang=en"
+```
+
+**Script:** `LLM_Development/download_pdfs.py`
+
+| Command | Action |
+|---------|--------|
+| `python download_pdfs.py --dry-run` | Preview downloads without fetching |
+| `python download_pdfs.py` | Download all 585 PDFs (~20 min) |
+| `python download_pdfs.py --resume` | Skip already-downloaded files |
+| `python download_pdfs.py --limit 10` | Test with first 10 documents |
+
+## Mechanism 2 — Automated Monthly Sync via UN Digital Library API
+
+The **UN Digital Library** (`digitallibrary.un.org`) provides a documented, free JSON API
+that indexes all CRPD documents and is updated as new submissions arrive.
+
+**API endpoint:**
+
+```
+GET https://digitallibrary.un.org/search
+    ?p=CRPD/C
+    &of=recjson
+    &sf=year
+    &so=d
+    &rg=100
+```
+
+This returns structured JSON including document symbols, publication dates, country
+information, and direct PDF download links. A query run in March 2026 returned documents
+published as recently as **January 2026**, confirming the API reflects current submissions.
+
+**Sync script:** `LLM_Development/sync_new_documents.py`
+
+```python
+# Core logic: query API → compare against known symbols → download new
+records = fetch_all_library_records("CRPD/C")
+known_symbols = set(df_existing["symbol"])
+new_records = [r for r in records if r["symbol_csv"] not in known_symbols]
+```
+
+**GitHub Actions schedule** (`.github/workflows/sync_crpd.yml`):
+
+```yaml
+on:
+  schedule:
+    - cron: '0 6 1 * *'   # 6 AM UTC, 1st of every month
+  workflow_dispatch:        # manual trigger from GitHub UI
+```
+
+Every month, GitHub automatically:
+
+1. Queries the UN Digital Library API
+2. Identifies new documents not yet in `crpd_reports.csv`
+3. Downloads the new PDFs
+4. Converts them to Markdown
+5. Appends new rows to the CSV
+6. Re-builds the FAISS knowledge base
+7. Commits all updated files back to the repository
+
+---
+
+# Step 2 — PDF to Markdown Conversion
+
+## Why This Step is Necessary
+
+The existing `clean_text` column was processed for NLP keyword matching — all punctuation
+removed, all text lowercased. It is broken for LLM use. Structure (article headings,
+paragraph references, numbered recommendations) has been lost entirely. Re-processing the
+original PDFs restores all of this.
+
+## Library Comparison
+
+### `pymupdf4llm` — Recommended {.badge-green}
+
+::: {.callout-tip}
+## Best default choice for CRPD documents
+:::
+
+```{python}
+import pymupdf4llm
+
+md_text = pymupdf4llm.to_markdown("Italy_2013_CRPD_C_ITA_1.pdf")
+# Returns clean Markdown with preserved headings, paragraphs, and tables
+```
+
+| Attribute | Value |
+|-----------|-------|
+| Output quality | Excellent for digital PDFs |
+| Speed | ~0.5 seconds per document |
+| Preserves | Headings, paragraphs, columns, tables |
+| OCR | Not needed (UN documents are native digital) |
+| Install | `pip install pymupdf4llm` |
+
+---
+
+### `docling` (IBM Research) — Best Quality
+
+```{python}
+from docling.document_converter import DocumentConverter
+
+converter = DocumentConverter()
+result = converter.convert("Italy_2013_CRPD_C_ITA_1.pdf")
+md_text = result.document.export_to_markdown()
+```
+
+| Attribute | Value |
+|-----------|-------|
+| Output quality | Best available (AI-based layout analysis) |
+| Speed | 5–15 seconds per document |
+| Preserves | Everything, including complex layouts |
+| OCR | Built-in (Surya) |
+| Install | `pip install docling` (~500 MB models on first run) |
+| Use when | pymupdf4llm output is insufficient on a sample check |
+
+---
+
+### Library Summary
+
+| Library | Quality | Speed | OCR | Recommended Use |
+|---------|:-------:|:-----:|:---:|-----------------|
+| **pymupdf4llm** | ★★★★☆ | ★★★★★ | No | **Default — start here** |
+| **docling** | ★★★★★ | ★★☆☆☆ | Yes | Fallback if quality insufficient |
+| marker | ★★★★☆ | ★★☆☆☆ | Yes | Scanned documents only |
+| markitdown | ★★★☆☆ | ★★★★☆ | No | Multi-format pipelines |
+| pdfplumber | ★★★☆☆ | ★★★★☆ | No | Only if full control needed |
+
+---
+
+# Step 3 — Text Chunking
+
+## Why Chunking is Necessary
+
+CRPD documents average 11,071 words (~14,400 tokens). Even with large LLM context
+windows, passing entire documents per query is wasteful and noisy. Chunking splits each
+document into focused segments so the vector search can retrieve only the most relevant
+portions.
+
+With 585 documents × ~26 chunks each, the full index contains approximately
+**15,000 chunks** — a very manageable size for FAISS on CPU.
+
+## Recommended Strategy — Semantic Chunking
+
+Split at natural Markdown heading boundaries produced by pymupdf4llm, falling back to
+fixed-size windows for very long sections.
+
+```{python}
+import re
+
+def chunk_by_section(md_text: str, max_words: int = 500,
+                     overlap: int = 75) -> list[str]:
+    """Split Markdown at heading boundaries; fixed fallback for long sections."""
+    sections = re.split(r'\n(?=#{1,3} )', md_text)
+    chunks, buffer = [], ""
+
+    for section in sections:
+        combined = (buffer + "\n" + section).strip() if buffer else section.strip()
+        if len(combined.split()) <= max_words:
+            buffer = combined
+        else:
+            if buffer:
+                chunks.append(buffer)
+            if len(section.split()) > max_words:
+                # Fixed-size fallback for oversized sections
+                words = section.split()
+                for i in range(0, len(words), max_words - overlap):
+                    chunks.append(" ".join(words[i:i + max_words]))
+                buffer = ""
+            else:
+                buffer = section.strip()
+
+    if buffer:
+        chunks.append(buffer)
+
+    return [c for c in chunks if len(c.split()) >= 20]
+```
+
+## Chunking Parameters
+
+| Parameter | Value | Rationale |
+|-----------|-------|-----------|
+| `max_words` | 500 | ~650 tokens; fits embedding model limits |
+| `overlap` | 75 | Prevents context loss at chunk boundaries |
+| Min chunk size | 20 words | Discard trivial header-only fragments |
+| Expected chunks/doc | ~26 | 11,071 ÷ (500 − 75) ≈ 26 |
+
+## Metadata per Chunk
+
+Every chunk carries full provenance metadata for cited answers:
+
+```{python}
+chunk_record = {
+    "chunk_id":    42,
+    "text":        "...",             # chunk content
+    "doc_id":      "Italy_2013_CRPD_C_ITA_1",
+    "country":     "Italy",
+    "year":        2013,
+    "doc_type":    "state report",
+    "region":      "Europe",
+    "symbol":      "CRPD/C/ITA/1",
+    "source_file": "Italy_2013_CRPD_C_ITA_1.pdf",
+    "chunk_index": 3,                 # position within document
+}
+```
+
+---
+
+# Step 4 — Vector Embeddings
+
+## What Embeddings Do
+
+An embedding model converts a chunk of text into a dense numerical vector (~768 numbers)
+that encodes its semantic meaning. Chunks with similar meaning have vectors that are
+geometrically close — enabling **semantic search**: a user's question is embedded into
+the same space, and the nearest chunks are retrieved regardless of exact word overlap.
+
+**Example of what this unlocks:**
+
+> **Query:** *"barriers to accessing courts for people with disabilities"*
+>
+> **Retrieved:** chunks containing *"procedural accommodations"*, *"legal aid for disabled
+> persons"*, *"access to justice mechanisms"* — even if none of those phrases appear in
+> the query.
+
+This is fundamentally superior to the current regex keyword matching.
+
+## Embedding Model Options
+
+All models below run **locally and for free** via `sentence-transformers`. No API cost.
+
+### `all-mpnet-base-v2` — Recommended {.badge-green}
+
+```{python}
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("all-mpnet-base-v2")
+embeddings = model.encode(texts, batch_size=64, show_progress_bar=True)
+# Shape: (N_chunks, 768)
+```
+
+| Attribute | Value |
+|-----------|-------|
+| Dimensions | 768 |
+| Quality | Highest for English text |
+| Speed | ~2,000 chunks/minute on CPU |
+| Max input | 384 tokens (~290 words) |
+| Cost | Free (local) |
+
+---
+
+### `multi-qa-mpnet-base-dot-v1` — Strong Alternative {.badge-blue}
+
+Fine-tuned specifically for **question-answering retrieval** on 215M Q&A pairs.
+Outperforms `all-mpnet-base-v2` on asymmetric search (short question → long passage).
+Worth testing side-by-side on 20–30 sample queries.
+
+```{python}
+model = SentenceTransformer("multi-qa-mpnet-base-dot-v1")
+```
+
+---
+
+### `all-MiniLM-L6-v2` — Fastest Option {.badge-yellow}
+
+6× faster, half the storage. Use for rapid prototyping or if Posit Cloud CPU is
+a constraint. Switch to mpnet for production.
+
+```{python}
+model = SentenceTransformer("all-MiniLM-L6-v2")
+# 384 dims, ~15,000 chunks/minute on CPU
+```
+
+---
+
+### Model Comparison
+
+| Model | Dims | Quality | Speed (CPU) | Cost | Use |
+|-------|:----:|:-------:|:-----------:|:----:|-----|
+| **all-mpnet-base-v2** | 768 | ★★★★★ | ★★★☆☆ | Free | **Default** |
+| **multi-qa-mpnet-base-dot-v1** | 768 | ★★★★★ | ★★★☆☆ | Free | Q&A focus |
+| all-MiniLM-L6-v2 | 384 | ★★★★☆ | ★★★★★ | Free | Prototyping |
+| OpenAI text-embedding-3-small | 1,536 | ★★★★★ | N/A | ~$0.15/corpus | Optional |
+
+---
+
+# Step 5 — Vector Store (FAISS)
+
+FAISS (Facebook AI Similarity Search) is an open-source in-process library. The index is a
+single binary file on disk, loaded once at app startup. No server, no Docker, no network
+latency.
+
+```{python}
+import faiss
+import numpy as np
+
+# Build (offline, once)
+dim = embeddings.shape[1]               # 768
+faiss.normalize_L2(embeddings)
+index = faiss.IndexFlatIP(dim)          # cosine similarity via inner product
+index.add(embeddings)
+faiss.write_index(index, "data/faiss_index.bin")
+
+# Search (online, per query — < 5ms for 15,000 chunks)
+query_vec = model.encode(["your question"])
+faiss.normalize_L2(query_vec)
+scores, indices = index.search(query_vec, k=8)   # top 8 chunks
+```
+
+## Vector Store Comparison
+
+| Store | Type | Metadata Filter | Overhead | Recommended |
+|-------|------|:--------------:|:--------:|:-----------:|
+| **FAISS** | In-process file | Post-filter | None | **Yes — default** |
+| ChromaDB | In-process DB | Built-in | Low | If filtering is critical |
+| LanceDB | In-process DB | Built-in | Low | At larger scale |
+| Pinecone / Qdrant | Cloud API | Built-in | High | Not needed |
+
+At 15,000 chunks, FAISS exact search completes in under 5 milliseconds. Approximate
+search methods (IVF, HNSW) add complexity with no meaningful speed benefit at this scale.
+
+---
+
+# Step 6 — LLM Selection
+
+## Role in the RAG Pipeline
+
+The LLM receives:
+
+1. A **system prompt** defining its role, constraints, and tone
+2. A **data context block** summarizing the current dashboard filter state
+3. **Retrieved document chunks** from FAISS search
+4. The **user's question**
+
+It does not memorize the corpus — it reasons over the chunks provided per query.
+
+## Recommended: Ollama llama3 (Local) + Groq llama-3.3-70b-versatile (Groq API)
+
+Ollama llama3 runs entirely locally with no API cost, making it ideal for high-volume
+summarization tasks. Groq llama-3.3-70b-versatile (Groq API) provides strong performance
+on formal legal and policy text with reliable instruction-following at zero cost on the
+free tier (30 req/min, 14,400 req/day), suitable for chat and report generation.
+The entire stack runs at **$0/month** — Ollama local + Groq free tier.
+
+### Model Routing Strategy
+
+| Task | Model | Reason |
+|------|-------|--------|
+| Auto-summary panels | Ollama `llama3` (local) | Free; fast; simple summarization; no data leaves machine |
+| Chat Q&A | Groq `llama-3.3-70b-versatile` | Best quality; free tier (30 req/min) |
+| RAG deep Q&A | Groq `llama-3.3-70b-versatile` | High quality; free tier |
+| Policy brief generation | Groq `llama-3.3-70b-versatile` | Strong quality for reports; free tier |
+
+### System Prompt
+
+```{python}
+CRPD_SYSTEM_PROMPT = """
+You are an expert research analyst for the Institute on Disability and Public
+Policy (IDPP) at American University. You assist researchers, policymakers,
+and advocates analyzing CRPD reporting data.
+
+Rules:
+- Answer ONLY using the data context and document excerpts provided.
+- Never invent statistics, country names, or document references.
+- Cite specific countries, years, and document types when referencing findings.
+- If context is insufficient to answer, say so explicitly.
+- Use formal, accessible language appropriate for policy audiences.
+- Frame answers through a disability rights lens — the shift from medical
+  to rights-based models is a central theme of this research.
+"""
+```
+
+---
+
+# Step 7 — New Dependencies
+
+Add to `requirements.txt`:
+
+```
+# LLM & RAG
+groq>=0.13.0
+ollama>=0.4.0
+sentence-transformers>=3.0.0
+faiss-cpu>=1.8.0
+pymupdf4llm>=0.0.17
+```
+
+Add to `.streamlit/secrets.toml` (git-ignored):
+
+```toml
+GROQ_API_KEY = "gsk_..."
+```
+
+---
+
+# Step 8 — Phased Development Plan
+
+## Phase 1 — AI Insights Panel
+
+**Timeline:** Week 1 &nbsp;|&nbsp; **Prerequisite:** Ollama installed locally
+
+Add an "AI Insights" button to the Overview tab. When clicked, Ollama llama3 receives
+a statistical summary of the current filtered data and returns a plain-English narrative
+— 3–4 bullet points describing what the current view shows.
+
+- [ ] Add `groq` and `ollama` to `requirements.txt`
+- [ ] Create `.streamlit/secrets.toml` with `GROQ_API_KEY`
+- [ ] Create `src/llm.py` with `get_client`, `build_data_context`, `ask_llm`
+- [ ] Add AI Insights expander to `tab_overview.py`
+
+**User experience:** *One button click → instant AI narrative of any filter state.*
+
+---
+
+## Phase 2 — Conversational Chat Interface
+
+**Timeline:** Week 2 &nbsp;|&nbsp; **Prerequisite:** Phase 1
+
+**Status: ✅ Complete (2026-03-18)**
+
+::: {.callout-note}
+## Architectural Decision — Standalone Page (not embedded in Analyze tab)
+
+**Original design:** The chat interface was planned as a `"💬 AI Research Assistant"` radio
+option inside `tab_analyze.py`, alongside Article Coverage, Model Shift, and other analysis
+views.
+
+**As built:** The AI Research Assistant is a **top-level standalone page** at `?page=chat`,
+routed from `app.py` via `elif page == "chat": tab_chat.render(df_all)`. It has its own
+navbar entry (`smart_toy` icon) and is not embedded in the Analysis tab.
+
+**Reason for change:** Better UX — the chat interface benefits from the full screen width
+and an uncluttered layout. Embedding it as a radio option inside tab_analyze would have
+constrained the layout and buried it under filter sidebar state. The standalone page uses
+`df_all` (the complete, unfiltered dataset) — consistent with the intent that the chat
+assistant works across the full corpus regardless of active filter state.
+
+**Affected files:**
+- `src/tab_chat.py` — new standalone module (not a modification of `tab_analyze.py`)
+- `app.py` — routes `page == "chat"` to `tab_chat.render(df_all)`
+- `src/nav.py` — top-level navbar entry with `smart_toy` icon
+:::
+
+Users ask free-form questions; Groq llama-3.3-70b-versatile answers using live aggregated
+statistics from the full (unfiltered) DataFrame. No RAG yet — answers are based on data
+summaries only.
+
+- [x] Implement `st.chat_input` + `st.session_state.chat_history`
+- [x] Add multi-turn support via `ask_llm_multiturn`
+- [x] Add example starter questions to guide users
+- [x] Built as standalone page `src/tab_chat.py` (intentional departure from embedded radio design)
+
+**Example questions this enables:**
+
+> *"Which region shows the highest growth in rights-based language?"*
+>
+> *"Are there countries that submitted State Reports but never received Concluding Observations?"*
+
+**Evaluation results (2026-03-19):** 13 questions (incl. 4 multi-turn turns), 0 errors.
+Overall avg 4.92/5.0 (PASS). Rate limit guard: PASS. Out-of-scope refusal: PASS.
+Multi-turn context retention: PASS.
+
+---
+
+## Phase 3 — Semantic Search & RAG
+
+**Timeline:** Weeks 3–4 &nbsp;|&nbsp; **Prerequisite:** PDF files + Phase 2
+
+This is the core upgrade. Chat answers become grounded in actual document text.
+
+- [ ] Locate and place 585 source PDFs in `data/pdfs/`
+- [ ] Run `LLM_Development/download_pdfs.py` if PDFs are not available
+- [ ] Install `pymupdf4llm`, `sentence-transformers`, `faiss-cpu`
+- [ ] Run `LLM_Development/build_knowledge_base.py` (one-time, ~20 min)
+- [ ] Add `semantic_search` and `rag_answer` to `src/llm.py`
+- [ ] Upgrade Phase 2 chat to use RAG: question → FAISS → Groq + evidence
+- [ ] Display retrieved source citations below each answer
+- [ ] Add semantic search to the Document Explorer sub-tab
+
+**User experience:** *Answers now cite real document excerpts with country, year, and type.*
+
+---
+
+## Phase 4 — Policy Brief Generation
+
+**Timeline:** Week 5 &nbsp;|&nbsp; **Prerequisite:** Phase 3
+
+One-click generation of structured, export-ready research briefs from any filter state.
+
+- [x] Add `generate_policy_brief` to `src/llm.py` (supersedes `generate_report`)
+- [x] ~~Add "Generate Research Brief" button to the Document Explorer~~ → **Approved change (2026-03-19):** Implemented as standalone `src/tab_brief.py` page (`?page=brief`) with dedicated left/right panel layout and region-aware country scoping. Approved at design stage.
+- [x] ~~Stream the output for responsive UX~~ → **Approved change (2026-03-19):** Spinner used instead of streaming — acceptable for brief-length output; streaming adds complexity without meaningful UX gain at this output size.
+- [x] ~~Add download buttons for Markdown and plain text~~ → **Approved change (2026-03-19):** Export removed — reserved for paid subscribers (subscription feature).
+
+**User experience:** *Select a region or country + articles + date range → click ✦ Generate Brief → view structured 4-section brief (Context, Key Findings, Recommendations, Sources) with generation stats.*
+
+---
+
+## Phase 5 — Evaluation & Quality Assurance
+
+**Timeline:** Ongoing from Phase 3 &nbsp;|&nbsp; **Prerequisite:** Phase 3
+
+Systematic measurement of retrieval quality and answer accuracy to guide iteration.
+
+::: {.callout-important}
+## Required Deliverables — Evaluation Scripts
+
+Every evaluation in Phase 5 must produce **two Python scripts**:
+
+1. **`LLM_Development/evaluate_phase4.py`** — runs all evaluation metrics end-to-end and saves results to `LLM_Development/eval_results_phase4.json`
+2. **`LLM_Development/visualize_phase4.py`** — reads the JSON results and produces interactive **Plotly charts** saved to `LLM_Development/charts/`
+
+These scripts must be committed and reproducible. Running `python evaluate_phase4.py` followed by `python visualize_phase4.py` must work from scratch with no manual steps.
+:::
+
+### Required Evaluation Scripts
+
+#### `evaluate_phase4.py`
+
+Must implement all of the following and write results to `eval_results_phase4.json`:
+
+- [ ] Run all test questions from `LLM_Development/test_questions_phase3.jsonl` through the full RAG pipeline
+- [ ] Compute **MRR**, **nDCG@10**, **Recall@5**, **Recall@10**, **Precision@5** across all retrieval queries
+- [ ] Score each answer 1–5 on **Accuracy**, **Completeness**, **Relevance**, **Groundedness** using LLM-as-Judge
+- [ ] Record **latency (ms)** per query
+- [ ] Run evaluation across **all configured models** (see Cross-Model Comparison below)
+- [ ] Emit a `"winner"` key and `"recommendation"` string in the output JSON
+
+#### `visualize_phase4.py`
+
+Must produce and save the following **6 Plotly charts** to `LLM_Development/charts/`.
+
+Charts are grouped into two evaluation lenses that must be visually distinct:
+
+- **IR / RAG lens** — measures retrieval pipeline quality (FAISS + embeddings): did we surface the right chunks?
+- **LLM-as-Judge lens** — measures answer quality using Groq llama-3.3-70b as the judge: was the final generated answer accurate, grounded, and complete?
+
+These two lenses can diverge. A config may retrieve excellent chunks (high IR scores) but still produce poor answers (low LLM-as-Judge scores), or vice versa. The charts must make this comparison visible.
+
+##### IR / RAG Charts (Retrieval Pipeline)
+
+| Chart | File | Type | Purpose |
+|---|---|---|---|
+| Bar: IR metrics per config | `phase4_ir_metrics.html` | `px.bar` (grouped) | MRR, nDCG@10, Recall@5, Recall@10, Precision@5 per model config; reference lines at targets (MRR 0.70, nDCG 0.80) |
+| Scatter: IR score vs latency | `phase4_ir_latency.html` | `px.scatter` | x = avg retrieval latency (ms), y = MRR; color = config; size = nDCG — shows whether faster configs sacrifice retrieval quality |
+
+##### LLM-as-Judge Charts (Answer Quality — Groq llama-3.3-70b evaluator)
+
+| Chart | File | Type | Purpose |
+|---|---|---|---|
+| Bar: answer quality per config | `phase4_judge_quality.html` | `px.bar` (grouped) | Accuracy, Completeness, Relevance, Groundedness (1–5) per model config; reference line at 3.5 (pass threshold) |
+| Heatmap: per-question scores | `phase4_judge_heatmap.html` | `px.imshow` | Rows = test questions, cols = dimensions; reveals which questions each config struggles with |
+
+##### Cross-Lens Comparison Charts
+
+| Chart | File | Type | Purpose |
+|---|---|---|---|
+| Radar: IR vs Judge per config | `phase4_radar_ir_vs_judge.html` | `go.Scatterpolar` | Two overlapping polygons per config — IR metrics (normalized 0–1) vs LLM-as-Judge scores (normalized 0–1) — shows alignment or divergence between retrieval and answer quality |
+| Scatter: IR score vs Judge score | `phase4_scatter_ir_vs_judge.html` | `px.scatter` | x = avg IR score (MRR), y = avg LLM-as-Judge score; one point per config; color = config; annotations flag configs where retrieval and answer quality diverge |
+
+::: {.callout-tip}
+## Why the IR vs Judge comparison matters
+
+If config_B (MiniLM embeddings) shows high LLM-as-Judge scores but low MRR, it means the LLM recovered well despite poor retrieval — suggesting the chunks it did find were sufficient. Conversely, if config_A retrieves perfectly (high MRR) but judge scores are low, the problem lies in the generation step (prompt, model, or context window), not retrieval. The cross-lens scatter is the most actionable chart for diagnosing where to improve.
+:::
+
+All charts must use the project color theme (UN Blue `#005bbb`) and be WCAG 2.2 compliant.
+
+### Cross-Model Comparison Framework
+
+`evaluate_phase4.py` must test **at least two model configurations** and compare them:
+
+| Config ID | Embedding Model | LLM | Notes |
+|---|---|---|---|
+| `config_A` | `all-mpnet-base-v2` (768-dim) | `groq/llama-3.3-70b-versatile` | **Current production — baseline** |
+| `config_B` | `all-MiniLM-L6-v2` (384-dim) | `groq/llama-3.3-70b-versatile` | Smaller/faster embeddings |
+| `config_C` | `all-mpnet-base-v2` (768-dim) | `ollama/llama3` (local) | Local LLM fallback |
+| `config_D` | `all-mpnet-base-v2` (768-dim) | `groq/llama-3.3-70b-versatile` + query rewriting | Advanced RAG technique |
+
+Output format in `eval_results_phase4.json`:
+
+```python
+{
+  "run_date": "YYYY-MM-DD",
+  "configs": {
+    "config_A": {
+      "embedding_model": "all-mpnet-base-v2",
+      "llm": "groq/llama-3.3-70b-versatile",
+      "scores": {
+        "accuracy": 4.75, "relevance": 4.625, "groundedness": 4.875,
+        "completeness": 4.5, "mrr": 0.82, "ndcg": 0.87,
+        "avg_latency_ms": 1240
+      },
+      "per_question": [...]
+    }
+  },
+  "winner": "config_A",
+  "recommendation": "..."
+}
+```
+
+### Acceptance Criteria (PM sign-off required before Phase 5 is marked Complete)
+
+- [ ] `evaluate_phase4.py` runs end-to-end with zero errors
+- [ ] `eval_results_phase4.json` produced and committed
+- [ ] All 6 Plotly charts generated in `LLM_Development/charts/` (2 IR, 2 LLM-as-Judge, 2 cross-lens)
+- [ ] At least one config reaches **MRR > 0.70** and **nDCG > 0.80**
+- [ ] At least one config reaches **overall answer quality ≥ 3.5/5.0** across all dimensions
+- [ ] `ruff check . && ruff format --check .` passes with zero errors
+
+---
+
+### Build CRPD Test Set
+
+- [ ] Create a JSONL file of 50+ human-written question–answer pairs across categories:
+  - **Single-article lookup** — e.g., "What does Article 24 say about inclusive education?"
+  - **Cross-country comparison** — e.g., "How do Rwanda and Kenya differ on Article 9 accessibility?"
+  - **Temporal trends** — e.g., "How has reporting on Article 19 changed between 2010 and 2025?"
+  - **Rights vs medical framing** — e.g., "Which countries still use predominantly medical-model language?"
+  - **Multi-document synthesis** — e.g., "What are common gaps across all State Party initial reports?"
+  - **Numerical/statistical** — e.g., "How many countries have submitted more than one report?"
+- [ ] Include expected source documents (country, year, type) for each question
+- [ ] Tag each question by difficulty (easy, medium, hard) and category
+
+### Retrieval Evaluation
+
+- [ ] Measure **Mean Reciprocal Rank (MRR)** — how quickly the correct chunk appears in results (target: > 0.7)
+- [ ] Measure **nDCG** (Normalized Discounted Cumulative Gain) — overall ranking quality (target: > 0.8)
+- [ ] Measure **Keyword Coverage** — do retrieved chunks contain expected key terms? (target: > 0.6)
+- [ ] Log retrieval results per test question for before/after comparison when tuning
+
+### Answer Quality Evaluation (LLM-as-Judge)
+
+- [ ] Use a separate Groq llama-3.3-70b-versatile call to score each answer 1–5 on:
+  - **Accuracy** — Is the answer factually correct given the source documents?
+  - **Completeness** — Does it cover all aspects of the question?
+  - **Relevance** — Does it directly address what was asked?
+  - **Groundedness** — Is every claim supported by a retrieved chunk? (hallucination detection)
+- [ ] Flag any answer where a cited article, country, or year does not appear in the retrieved sources
+
+### Human Evaluation Baseline
+
+- [ ] Have 2–3 team members independently answer 20 test questions using only the source documents
+- [ ] Use human answers as ground truth to calibrate the LLM-as-judge scores
+- [ ] Identify question categories where human and LLM-judge scores diverge
+
+### Advanced Retrieval Techniques (conditional on evaluation results)
+
+- [ ] **Query rewriting** — Use Ollama llama3 to reformulate vague user questions before retrieval
+- [ ] **Reranking** — Use Ollama llama3 to reorder top-k retrieved chunks by true relevance before generation
+- [ ] **Multi-pass retrieval** — Run query variants and merge/deduplicate results for higher recall
+- [ ] Only implement each technique if evaluation metrics show room for improvement
+
+### Ongoing Monitoring
+
+- [ ] Log all production queries, retrieved chunks, and answers for periodic review
+- [ ] Track answer quality metrics weekly during initial rollout
+- [ ] Set up alerts for retrieval failures (zero results or very low similarity scores)
+
+**User experience:** *The system improves over time; quality is measurable, not anecdotal.*
+
+---
+
+## Phase Timeline Overview
+
+| Phase | Feature | Week | LLM Model | Cost/Query |
+|-------|---------|:----:|-----------|:----------:|
+| 1 | AI Insights panel | 1 | Ollama llama3 (local) | Free |
+| 2 | Chat Q&A (stats context) | 2 | Groq llama-3.3-70b-versatile | Free |
+| 3 | RAG chat + semantic search | 3–4 | Groq llama-3.3-70b-versatile | Free |
+| 4 | Policy brief generation | 5 | Groq llama-3.3-70b-versatile | Free |
+| 5 | Evaluation & quality assurance | Ongoing | Ollama llama3 (judge) | Free |
+
+---
+
+## Development Workflow Per Phase
+
+Each phase follows a structured pipeline rather than jumping straight to code:
+
+| Step | Activity | Output |
+|:----:|----------|--------|
+| 1 | **Requirements** | Problem definition and acceptance criteria (plan documents) |
+| 2 | **Design** | UI mockups in Pencil for all user-facing components |
+| 3 | **Infrastructure** | Backend logic — embeddings, FAISS, API calls, data pipelines |
+| 4 | **Integration** | Wire backend into Streamlit using the design as spec |
+| 5 | **Evaluate** | Run Phase 5 metrics against test set; iterate if needed |
+
+- [ ] Design Phase 1 UI (AI Insights panel) in Pencil before coding
+- [ ] Design Phase 2 UI (Chat Q&A interface) in Pencil before coding
+- [ ] Design Phase 3 UI (semantic search bar, source citations) in Pencil before coding
+- [ ] Design Phase 4 UI (report generation button, download panel) in Pencil before coding
+
+Designing the UI before generating code ensures consistency with the existing dashboard (UN Blue theme, WCAG 2.2, Plotly charts) and reduces iteration cycles.
+
+---
+
+# Cost Management
+
+## Strategies
+
+| Strategy | Implementation |
+|----------|---------------|
+| Model routing | Ollama llama3 for summaries (free, local); Groq for chat and reports (free tier) |
+| Response caching | `@st.cache_data` on deterministic calls |
+| Chunk truncation | Cap each retrieved chunk at 600 words before inclusion |
+| Retrieval limit | Default top-6 chunks; never more than 10 |
+| Local embeddings | `sentence-transformers` runs locally — zero API cost |
+| Session soft-cap | Track calls per session in `st.session_state`; warn at 20 |
+
+## Estimated Monthly Cost
+
+Assuming ~50 active users/month, 10 queries/user:
+
+| Operation | Volume | Estimated Cost |
+|-----------|-------:|:-------------:|
+| AI Insights (Ollama llama3) | 500 calls | Free (local) |
+| Chat Q&A (Groq) | 300 calls | Free (free tier: 30 req/min, 14,400 req/day) |
+| RAG Q&A (Groq) | 200 calls | Free |
+| Report Generation (Groq) | 50 calls | Free |
+| **Total** | | **$0/month** |
+
+---
+
+# Security Considerations
+
+| Concern | Mitigation |
+|---------|-----------|
+| API key exposure | `secrets.toml` stores `GROQ_API_KEY`; never committed; git-ignored |
+| Prompt injection | User input never interpolated into system prompt |
+| Cost runaway | Session-level call counter + `st.cache_data`; Groq free tier has built-in rate limits |
+| Data in transit — summaries | Ollama runs locally; no data leaves the machine for summary generation |
+| Data in transit — chat/reports | All Groq API calls are HTTPS |
+| Document privacy | CRPD documents are public UN records — no PII concern |
+
+---
+
+# Scripts Reference
+
+| Script | Location | Purpose | Run |
+|--------|----------|---------|-----|
+| `download_pdfs.py` | `LLM_Development/` | Initial download of 585 PDFs | Once |
+| `sync_new_documents.py` | `LLM_Development/` | Monthly detection + download of new documents | Monthly (auto via GitHub Actions) |
+| `build_knowledge_base.py` | `LLM_Development/` | PDF → Markdown → chunks → FAISS index | Once, then after each sync |
+| `sync_crpd.yml` | `.github/workflows/` | GitHub Actions schedule for auto-sync | Automated |
+
+---
+
+# Implementation Status (as of March 2026)
+
+This section tracks the current state of each component against the plan.
+
+## Infrastructure Status
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `crpd_reports.csv` | ✅ Complete | 585 documents, 155 countries, 2010–2026 |
+| `data/pdfs/` | 🟡 Partial | 27 of 585 PDFs downloaded |
+| `data/markdown/` | ❌ Not started | Requires PDFs first |
+| `data/embeddings.npy` | ❌ Not started | Requires markdown conversion first |
+| `data/faiss_index.bin` | ❌ Not started | Requires embeddings first |
+| `data/chunks_metadata.json` | ❌ Not started | Requires chunking first |
+| `.streamlit/secrets.toml` | ✅ Complete | GROQ_API_KEY configured |
+| `src/llm.py` | ✅ Complete | `get_client`, `build_data_context`, `ask_llm`, `ask_llm_multiturn`, rate limit guard |
+
+## Script Status
+
+| Script | Status | Notes |
+|--------|--------|-------|
+| `LLM_Development/download_pdfs.py` | ❌ Not created | Planned; symbol-to-URL logic defined |
+| `LLM_Development/sync_new_documents.py` | ❌ Not created | Planned; UN Digital Library API endpoint identified |
+| `LLM_Development/build_knowledge_base.py` | ❌ Not created | Full code outlined in LLM_Integration_Plan.qmd |
+| `.github/workflows/sync_crpd.yml` | ✅ Exists | Monthly sync workflow defined |
+
+## Phase Status
+
+| Phase | Feature | Status | Notes |
+|-------|---------|--------|-------|
+| 1 | AI Insights panel | ✅ Complete (2026-03-18) | `src/llm.py` + `tab_overview.py`; eval avg 3.58/5.0 |
+| 2 | Chat Q&A interface | ✅ Complete (2026-03-18) | Standalone page `tab_chat.py` at `?page=chat`; eval avg 4.92/5.0 |
+| 3 | RAG + semantic search | ❌ Not started | Depends on PDF collection + Phase 2 |
+| 4 | Policy brief generation | ❌ Not started | Depends on Phase 3 |
+| 5 | Evaluation & quality assurance | ❌ Not started | Depends on Phase 3 |
+
+## Next Steps
+
+Phases 1 and 2 are complete. The next milestone is Phase 3 (RAG + Semantic Search).
+
+1. **Design Phase 3 UI** — Create Pencil mockup for semantic search bar and source citations panel in `LLM_Development/designs/`
+2. **Complete PDF collection** — Run `LLM_Development/download_pdfs.py` to download remaining PDFs (27 of 585 downloaded)
+3. **Build knowledge base** — Run `LLM_Development/build_knowledge_base.py` once PDFs are ready (PDF → Markdown → chunks → FAISS)
+4. **Infrastructure** — Add `semantic_search` and `rag_answer` to `src/llm.py`
+5. **Integration** — Upgrade `tab_chat.py` chat to use RAG; add semantic search to Document Explorer
+
+---
+
+# Decision Summary
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Document source | UN Treaty Body Database + UN Digital Library API | Only available sources |
+| PDF converter | `pymupdf4llm` | Best speed/quality for digital PDFs |
+| Fallback converter | `docling` | Best quality if pymupdf4llm insufficient |
+| Chunking | Semantic (by Markdown section) | Coherent, self-contained chunks |
+| Chunk size | 500 words / 75 overlap | Fits embedding limits; sufficient context |
+| Embedding model | `all-mpnet-base-v2` | Best English quality; free; local |
+| Vector store | FAISS `IndexFlatIP` | Zero infrastructure; fast at 15K chunks |
+| LLM | Ollama llama3 (local) + Groq llama-3.3-70b-versatile (Groq API) | Free local summaries; free Groq tier for chat/reports |
+| Model routing | Ollama for summaries; Groq for chat and reports | $0/month — both tiers free |
+| Scheduling | GitHub Actions (monthly) | No infrastructure; commits automatically |
+| Deployment | Posit Cloud (existing) | No infrastructure changes required |
+
+---
+
+# Appendix — Glossary
+
+**RAG (Retrieval-Augmented Generation)**
+: A pattern where relevant documents are retrieved from a knowledge base and included in the
+LLM's prompt, grounding its answers in real source material rather than training knowledge alone.
+
+**Embedding**
+: A dense numerical vector representing the semantic meaning of a text segment. Semantically
+similar texts have embeddings that are geometrically close.
+
+**Chunk**
+: A fixed-size or semantically-bounded segment of a document. The unit of indexing and
+retrieval in the RAG pipeline.
+
+**FAISS**
+: Facebook AI Similarity Search. An open-source library for efficient nearest-neighbor
+search over dense vectors. Used as the vector store.
+
+**Cosine Similarity**
+: A measure of similarity between two vectors based on the angle between them. Used to
+rank retrieved chunks by relevance to a query.
+
+**Sentence Transformers**
+: A Python library providing pre-trained models for generating text embeddings. All models
+used in this plan are free and run locally with no API calls.
+
+**UN Digital Library API**
+: A documented JSON search API at `digitallibrary.un.org` that indexes all UN documents
+and supports programmatic search by symbol prefix, sorted by date.

@@ -1,7 +1,49 @@
 # Requirements for CRPD Disability Rights Data Dashboard
-streamlit==1.40.0
-pandas==2.2.3
-numpy==1.26.4
-plotly==5.24.1
-scikit-learn==1.5.2
-scipy==1.14.1
+# Auto-synced by sync-requirements skill — versions pinned to installed environment
+# Python version: 3.12
+
+# Core dashboard
+streamlit==1.54.0
+plotly==6.5.2
+
+# Data processing
+pandas==2.3.3
+numpy==2.4.3
+scikit-learn==1.8.0
+scipy==1.17.1
+
+# Geography & mapping
+folium==0.20.0
+pycountry==26.2.16
+streamlit-folium==0.26.1
+
+# Utilities
+requests==2.32.4
+
+# Security — HTML sanitization (XSS prevention for LLM output rendering)
+bleach>=6.0.0
+
+# Data collection pipeline (scripts/)
+pdfplumber>=0.11.0        # PDF text extraction for scripts/sync_new_documents.py
+country-converter>=0.7.7  # Country → region/subregion mapping
+
+# LLM integration (src/llm.py)
+groq==1.1.1                    # Groq API client — llama-3.3-70b for chat + reports
+ollama==0.6.1                  # Ollama client — llama3 for local summaries/insights
+anthropic>=0.39.0              # Claude API — Premium tier research pipeline (Phase 3)
+
+# Visualizations
+altair==5.5.0                  # Used in explore tab charts
+
+# Phase 3 — RAG + Semantic Search (LLM_Development/build_knowledge_base.py + src/llm.py)
+sentence-transformers>=3.0.0   # Local embeddings — all-mpnet-base-v2 (768-dim)
+faiss-cpu==1.13.2              # Vector similarity search — IndexFlatIP
+pymupdf4llm==1.27.2            # PDF → Markdown conversion for knowledge base build
+
+# Research briefing export (src/research_export.py)
+fpdf2>=2.7.0                   # PDF export for research briefings
+python-docx>=1.1.0             # DOCX export for research briefings
+
+# WCAG audit scripts (dev/testing only)
+playwright==1.58.0
+axe-playwright-python==0.1.7

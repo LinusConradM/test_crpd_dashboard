@@ -1,0 +1,494 @@
+{
+  "phase": 3,
+  "timestamp": "2026-03-19T11:08:05.078381+00:00",
+  "summary": {
+    "rag_questions": 10,
+    "search_tests": 5,
+    "rag_overall_avg": 4.625,
+    "rag_pass": true,
+    "search_pass": true,
+    "phase_pass": true,
+    "dim_avgs": {
+      "accuracy": 4.75,
+      "relevance": 4.625,
+      "groundedness": 4.875,
+      "completeness": 4.5,
+      "citation": 4.375
+    }
+  },
+  "results": [
+    {
+      "id": "p3_q1",
+      "category": "rag_quote",
+      "question": "Quote specific text from a CRPD state report about reasonable accommodation in the workplace.",
+      "answer": "According to the United Arab Emirates 2013 State Report, \"article 14 of Federal Act No. 11 of 2008, as amended by Federal Act No. 9 of 2011, concerning human resources stipulates that persons with disabilities must be given priority access to public service and those working therein must be provided with all the facilities needed for the performance of their official duties by ensuring that their workplaces are equipped with the necessary requirements in a manner consistent with the nature of their special needs;\" (United Arab Emirates, 2013, State Report). \n\nAdditionally, the Poland 2014 State Report mentions that \"essential reasonable accommodations include situation-specific changes and adaptations resulting from special needs of a disabled person, as communicated to an employer, provided that implementation of such changes and adaptations does not amount to a disproportionate burden on an employer\" (Poland, 2014, State Report).\n\nThe Japan 2022 State Report also notes that \"MHLW developed the Guidelines on Prohibition of Discrimination against Persons with Disabilities and the Guidelines for Reasonable Accommodation for employers\" (Japan, 2022, State Report). \n\nLastly, the Croatia 2011 State Report states that \"the Law on Professional Rehabilitation and Employment of Persons with Disabilities (2002) regulates manners of ensuring reasonable adaptation of workplaces: adaptation of a workplace and working conditions, compensation of difference due to reduced work efficiency, co-financing of personal assistant costs (helper in work), co-financing of interest on credit funds, co-financing of work therapist costs\" (Croatia, 2011, State Report).",
+      "chunks_retrieved": 8,
+      "chunk_sources": [
+        {
+          "country": "United Arab Emirates",
+          "year": 2013,
+          "doc_type": "state report",
+          "score": 0.6116842031478882
+        },
+        {
+          "country": "Poland",
+          "year": 2014,
+          "doc_type": "state report",
+          "score": 0.5703087449073792
+        },
+        {
+          "country": "New Zealand",
+          "year": 2014,
+          "doc_type": "state report",
+          "score": 0.5571507215499878
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 4,
+        "citation": 5,
+        "notes": "The answer accurately quotes specific text from CRPD state reports about reasonable accommodation in the workplace, citing multiple sources and including quoted text traceable to the retrieved chunks."
+      },
+      "error": null
+    },
+    {
+      "id": "p3_q2",
+      "category": "rag_country",
+      "question": "What did Kenya report about disability rights and education in their CRPD submission?",
+      "answer": "According to Kenya's 2012 State Report (Kenya, 2012, State Report), the Government of Kenya recognizes that learners with disabilities have a right to education without discrimination and based on equal opportunities (Source 4: Kenya, 2012, State Report, paragraph 177). The report also highlights that the Constitution of Kenya, 2010, guarantees every citizen a right to education, and Article 54 makes access to inclusive education by persons with disabilities a Constitutional right (Source 4: Kenya, 2012, State Report, paragraphs 178-180).\n\nFurthermore, in their 2015 State Report (Kenya, 2015, State Report), Kenya reported that they are providing inclusive education through various measures, including ensuring schools are governed by principles of non-discrimination, preventing students from being expelled due to their disabilities, and providing training for faculty and administrators to respond to diversity in the classroom (Source 5: Kenya, 2015, State Report, paragraph 62).\n\nAdditionally, the 2015 State Report (Kenya, 2015, State Report) mentions that the National Development Fund for Persons with Disabilities provides assistance in terms of school fees for both primary and vocational education, as well as assistive devices for children with disabilities (Source 5: Kenya, 2015, State Report, paragraph 62(h)).\n\nIt is worth noting that the Committee on the Rights of Persons with Disabilities, in their Concluding Observations (Kenya, 2015, Concluding Observations), welcomed the measures taken by Kenya, including the adoption of affirmative action measures in the area of employment for persons with disabilities and the establishment of a cash transfer programme for persons with \"severe disabilities\" (Source 2: Kenya, 2015, Concluding Observations, paragraph 4). However, the Committee also expressed concerns about the delay in amending the Persons with Disabilities Act 2003 and the persistence of derogatory terminology against persons with disabilities in the Constitution and other legislation (Source 2: Kenya, 2015, Concluding Observations, paragraph 5).",
+      "chunks_retrieved": 8,
+      "chunk_sources": [
+        {
+          "country": "Kenya",
+          "year": 2012,
+          "doc_type": "state report",
+          "score": 0.7880849838256836
+        },
+        {
+          "country": "Kenya",
+          "year": 2015,
+          "doc_type": "state report",
+          "score": 0.7872273921966553
+        },
+        {
+          "country": "Kenya",
+          "year": 2012,
+          "doc_type": "state report",
+          "score": 0.7832959890365601
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "citation": 5,
+        "notes": "The answer accurately reflects the content of the retrieved documents, specifically citing relevant paragraphs and sources, including the year and document type."
+      },
+      "error": null
+    },
+    {
+      "id": "p3_q3",
+      "category": "rag_synthesis",
+      "question": "Which countries mention legal capacity reforms and supported decision-making in their CRPD reports?",
+      "answer": "Unfortunately, the provided excerpts do not explicitly mention legal capacity reforms and supported decision-making in the context of the CRPD reports. The excerpts primarily focus on the countries' general approaches to implementing the CRPD, their institutional frameworks, and international cooperation.\n\nHowever, it is essential to note that the excerpts do not cover all aspects of the CRPD reports, and the information on legal capacity reforms and supported decision-making might be present in other parts of the reports not included in the excerpts.\n\nGiven the available information, it is not possible to provide a definitive answer to the question. If more comprehensive excerpts or the full reports were available, it might be possible to identify countries that have mentioned legal capacity reforms and supported decision-making in their CRPD reports.\n\nIn the provided excerpts, none of the countries (European Union, 2014, State Report; Tunisia, 2010, State Report; Egypt, 2020, State Report; Chad, 2025, State Report; Bangladesh, 2017, State Report; Ghana, 2018, State Report; Mongolia, 2015, State Report) explicitly discuss legal capacity reforms and supported decision-making.",
+      "chunks_retrieved": 8,
+      "chunk_sources": [
+        {
+          "country": "European Union",
+          "year": 2014,
+          "doc_type": "state report",
+          "score": 0.5938697457313538
+        },
+        {
+          "country": "Tunisia",
+          "year": 2010,
+          "doc_type": "state report",
+          "score": 0.5812387466430664
+        },
+        {
+          "country": "European Union",
+          "year": 2014,
+          "doc_type": "state report",
+          "score": 0.5695286393165588
+        }
+      ],
+      "scores": {
+        "accuracy": 4,
+        "relevance": 4,
+        "groundedness": 5,
+        "completeness": 3,
+        "citation": 4,
+        "notes": "The answer is accurate and relevant, but it does not provide a complete response to the question due to the lack of information in the provided excerpts. The answer is well-grounded in the available sources and does not hallucinate any information. It also properly cites the sources and provides a clear explanation of the limitations of the answer."
+      },
+      "error": null
+    },
+    {
+      "id": "p3_q4",
+      "category": "rag_article",
+      "question": "What evidence exists in CRPD state reports about sign language recognition and Deaf community rights?",
+      "answer": "The excerpts from CRPD state reports and concluding observations provide evidence of the importance of sign language recognition and Deaf community rights. According to Zambia 2024 State Report, the Committee notes the State party's efforts to develop a sign language dictionary, but is concerned that the national sign language is not yet recognized as an official language. The Committee recommends that Zambia recognize the national sign language as an official language and take measures to ensure the accessibility of all public information, including television and media services, for all persons with disabilities in accessible communication formats such as sign language (Zambia 2024 State Report).\n\nSimilarly, Canada 2017 State Report notes that the Committee recommends that Canada recognize American Sign Language and Quebec Sign Language as official languages and establish a mechanism to certify the quality of interpretation services (Canada 2017 State Report). Iraq 2019 State Report also recommends that the State party establish a mechanism to certify the quality of sign language interpretation services and promote the use of sign language in all areas of life (Iraq 2019 State Report).\n\nTurkmenistan 2015 State Report notes that the Committee is concerned that sign language is only considered as a means of interpersonal communication and not as an official language on its own. The Committee recommends that Turkmenistan recognize the country's sign language as an official language (Turkmenistan 2015 State Report). Vanuatu's report is not available, but Palau 2025 State Report recommends that the State Party recognize Palauan Sign Language as an official language and promote access to and the use of sign language in all areas of life (Palau 2025 State Report).\n\nAdditionally, the United Kingdom  State Report notes that the Committee is concerned about the insufficient resources for the education and training of sign language interpreters and the insufficient availability of and access to high-quality educated sign language interpreters (United Kingdom of Great Britain and Northern Ireland State Report). Afghanistan 2022 State Report notes that the Committee asks for information on the steps taken to promote the use of sign language in all settings, in particular in education, in the workplace, and in community settings (Afghanistan 2022 State Report).\n\nOverall, the excerpts provide evidence that many countries have not yet recognized sign language as an official language, and that there is a need for greater promotion and support of sign language and Deaf community rights.",
+      "chunks_retrieved": 8,
+      "chunk_sources": [
+        {
+          "country": "Zambia",
+          "year": 2024,
+          "doc_type": "state report",
+          "score": 0.6619852781295776
+        },
+        {
+          "country": "Canada",
+          "year": 2017,
+          "doc_type": "state report",
+          "score": 0.6562947034835815
+        },
+        {
+          "country": "Iraq",
+          "year": 2019,
+          "doc_type": "state report",
+          "score": 0.6539477109909058
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "citation": 5,
+        "notes": "The answer accurately quotes and paraphrases the retrieved text, providing evidence from multiple CRPD state reports and citing specific sources with country and year. It fully addresses the question about sign language recognition and Deaf community rights, covering various aspects and countries."
+      },
+      "error": null
+    },
+    {
+      "id": "p3_q5",
+      "category": "rag_regional",
+      "question": "What do state reports from African countries say about accessibility of the built environment?",
+      "answer": "State reports from African countries highlight efforts to improve accessibility of the built environment for persons with disabilities. In Ghana, for example, the state report (Ghana, 2018, State Report) notes that Act 715 requires public places and goods and services to be made accessible to persons with disabilities. The report also mentions the development of the Ghana Accessibility Standards for the Built-Environment Policy, which provides specifications for policymakers, implementers, and service providers to ensure quality and non-discriminatory services in the built environment.\n\nSimilarly, in Malawi, the state report (Malawi, 2017, State Report) states that the Government has been encouraging owners of public property to adapt existing buildings, and 207 public and private buildings have been renovated to provide access points for persons with disabilities. The report also mentions that the Government is developing access standards to guide construction and adaptation of public infrastructure for accessibility to persons with disabilities.\n\nIn Ethiopia, the state report (Ethiopia, 2016, State Report) notes that the Ministry of Construction and Urban Development has developed the Building Code Proclamation No. 624/2009 and Building Regulation 243/2011 to ensure the design of accessible buildings. The report also mentions that the Ministry encourages modifying existing buildings that are not accessible for persons with disabilities.\n\nHowever, despite these efforts, some state reports also highlight challenges and limitations in ensuring accessibility. For example, the state report from Mauritius (Mauritius, 2024, State Report) notes that buildings in the country remain largely inaccessible, despite amendments to the Building Control Regulations to facilitate access for persons with disabilities.\n\nOverall, state reports from African countries suggest that while there are efforts to improve accessibility of the built environment, more needs to be done to ensure that persons with disabilities have equal access to public buildings, transportation, and other facilities.",
+      "chunks_retrieved": 8,
+      "chunk_sources": [
+        {
+          "country": "Ghana",
+          "year": 2018,
+          "doc_type": "state report",
+          "score": 0.5711628198623657
+        },
+        {
+          "country": "Malawi",
+          "year": 2017,
+          "doc_type": "state report",
+          "score": 0.540480375289917
+        },
+        {
+          "country": "Ethiopia",
+          "year": 2016,
+          "doc_type": "state report",
+          "score": 0.529033899307251
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "citation": 5,
+        "notes": "The answer accurately reflects the content of the retrieved documents from African countries, including Ghana, Malawi, and Ethiopia, and provides specific examples and citations to support the claims."
+      },
+      "error": null
+    },
+    {
+      "id": "p3_q6",
+      "category": "hallucination_probe",
+      "question": "What did Atlantis report about disability inclusion in its CRPD submission?",
+      "answer": "There is no mention of Atlantis in the provided document excerpts. The excerpts are from various countries, including the European Union, Venezuela, European, Iraq, Malawi, Netherlands, Jamaica, and Latvia, but none of them mention Atlantis. \n\nTherefore, it is not possible to answer the question based on the provided sources. If you could provide more context or information about Atlantis, I may be able to help you better.",
+      "chunks_retrieved": 8,
+      "chunk_sources": [
+        {
+          "country": "European Union",
+          "year": 2014,
+          "doc_type": "state report",
+          "score": 0.6729850769042969
+        },
+        {
+          "country": "Venezuela (Bolivarian Republic of)",
+          "year": 2022,
+          "doc_type": "state report",
+          "score": 0.6658670902252197
+        },
+        {
+          "country": "European",
+          "year": 2025,
+          "doc_type": "state report",
+          "score": 0.6596798896789551
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "citation": 5,
+        "notes": "The answer correctly refuses to provide information about a non-existent country, Atlantis, and clearly states that no documents from Atlantis exist, demonstrating excellent performance across all evaluation criteria."
+      },
+      "error": null
+    },
+    {
+      "id": "p3_q7",
+      "category": "out_of_scope",
+      "question": "What is the current GDP of Germany and how does it relate to disability funding?",
+      "answer": "The provided excerpts do not mention the current GDP of Germany. However, they do provide information on the funding allocated to disability-related benefits and services in Germany.\n\nAccording to Germany, 2011, State Report, more than Euro 44 billion were spent on benefits for long-term care, participation, and occupational and medical rehabilitation (Source 1: Germany, 2011, State Report). This funding is contributed by the Federation, the L\u00e4nder, local authorities, and the solidarity-based community of contributors to social insurance.\n\nAdditionally, the report mentions that Euro 19 billion were spent on benefits for long-term care, Euro 11.9 billion on integration assistance, Euro 3.6 billion on occupational rehabilitation, Euro 3.4 billion on medical rehabilitation, and Euro 3.5 billion on medical treatment, medical, occupational, and social rehabilitation (Source 1: Germany, 2011, State Report).\n\nIt is essential to note that the excerpts do not provide information on the current GDP of Germany or its relation to disability funding. To answer this question, more recent and comprehensive data would be required.",
+      "chunks_retrieved": 8,
+      "chunk_sources": [
+        {
+          "country": "Germany",
+          "year": 2011,
+          "doc_type": "state report",
+          "score": 0.7056046724319458
+        },
+        {
+          "country": "Germany",
+          "year": 2011,
+          "doc_type": "state report",
+          "score": 0.6533952951431274
+        },
+        {
+          "country": "Germany",
+          "year": 2011,
+          "doc_type": "state report",
+          "score": 0.6313279271125793
+        }
+      ],
+      "scores": {
+        "accuracy": 4,
+        "relevance": 3,
+        "groundedness": 4,
+        "completeness": 4,
+        "citation": 5,
+        "notes": "The answer correctly states that the provided excerpts do not mention the current GDP of Germany and instead focuses on the funding allocated to disability-related benefits and services in Germany, which is relevant to the CRPD documents. However, it could be improved by more clearly declining the GDP question and explaining that it is outside the document scope."
+      },
+      "error": null
+    },
+    {
+      "id": "p3_q8",
+      "category": "rag_citation_check",
+      "question": "Summarize what Australia reported about inclusive education in their CRPD state report.",
+      "answer": "There is no information available in the provided excerpts about Australia's report on inclusive education. The excerpts provided are from various countries, including Slovenia, United Kingdom, South Africa, Philippines, Montenegro, Morocco, Belgium, and Netherlands, but none of them are from Australia. Therefore, it is not possible to summarize Australia's report on inclusive education based on the provided information.",
+      "chunks_retrieved": 8,
+      "chunk_sources": [
+        {
+          "country": "Slovenia",
+          "year": 2018,
+          "doc_type": "state report",
+          "score": 0.7063264846801758
+        },
+        {
+          "country": "United Kingdom of Great Britain and Northern Ireland",
+          "year": null,
+          "doc_type": "state report",
+          "score": 0.7057310342788696
+        },
+        {
+          "country": "South Africa",
+          "year": 2014,
+          "doc_type": "state report",
+          "score": 0.7055262327194214
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "citation": 1,
+        "notes": "The answer correctly states that there is no information available about Australia's report, but it fails to cite the correct source or year since no source from Australia was provided."
+      },
+      "error": null
+    },
+    {
+      "id": "p3_q9",
+      "category": "rag_rights_framing",
+      "question": "How do CRPD concluding observations address the shift from institutionalization to community living?",
+      "answer": null,
+      "chunks_retrieved": 0,
+      "scores": null,
+      "error": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kf2cxd7yfhe9wbgpwdwqg456` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 94843, Requested 5593. Please try again in 6m16.704s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "id": "p3_q10",
+      "category": "rag_recency",
+      "question": "What have countries reported about disability and digital inclusion in their most recent CRPD submissions?",
+      "answer": null,
+      "chunks_retrieved": 0,
+      "scores": null,
+      "error": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kf2cxd7yfhe9wbgpwdwqg456` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 94843, Requested 5477. Please try again in 4m36.48s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "id": "p3_s1",
+      "category": "semantic_search",
+      "test_type": "search",
+      "query": "inclusive education children with disabilities",
+      "results_count": 8,
+      "top_results": [
+        {
+          "country": "United Kingdom of Great Britain and Northern Ireland",
+          "year": null,
+          "doc_type": "state report",
+          "score": 0.8234
+        },
+        {
+          "country": "Slovenia",
+          "year": 2018,
+          "doc_type": "state report",
+          "score": 0.8223
+        },
+        {
+          "country": "Belgium",
+          "year": 2024,
+          "doc_type": "state report",
+          "score": 0.8144
+        }
+      ],
+      "checks": {
+        "retrieval_hit": true,
+        "scores_in_range": true,
+        "top_score_reasonable": true
+      },
+      "passed": true,
+      "error": null
+    },
+    {
+      "id": "p3_s2",
+      "category": "semantic_search",
+      "test_type": "search",
+      "query": "legal capacity supported decision-making Article 12",
+      "results_count": 8,
+      "top_results": [
+        {
+          "country": "Ireland",
+          "year": 2021,
+          "doc_type": "state report",
+          "score": 0.7588
+        },
+        {
+          "country": "Slovakia",
+          "year": 2015,
+          "doc_type": "state report",
+          "score": 0.7091
+        },
+        {
+          "country": "Jordan",
+          "year": 2012,
+          "doc_type": "state report",
+          "score": 0.6763
+        }
+      ],
+      "checks": {
+        "retrieval_hit": true,
+        "scores_in_range": true,
+        "top_score_reasonable": true
+      },
+      "passed": true,
+      "error": null
+    },
+    {
+      "id": "p3_s3",
+      "category": "semantic_search_filter",
+      "test_type": "search_filter",
+      "query": "accessibility transportation infrastructure",
+      "results_count": 8,
+      "top_results": [
+        {
+          "country": "Denmark",
+          "year": 2011,
+          "doc_type": "state report",
+          "score": 0.7588
+        },
+        {
+          "country": "Belgium",
+          "year": 2024,
+          "doc_type": "state report",
+          "score": 0.7372
+        },
+        {
+          "country": "Czechia",
+          "year": 2026,
+          "doc_type": "state report",
+          "score": 0.7356
+        }
+      ],
+      "checks": {
+        "retrieval_hit": true,
+        "filter_doc_type_respected": true
+      },
+      "passed": true,
+      "error": null
+    },
+    {
+      "id": "p3_s4",
+      "category": "semantic_search_filter",
+      "test_type": "search_filter",
+      "query": "women with disabilities gender",
+      "results_count": 8,
+      "top_results": [
+        {
+          "country": "Palau",
+          "year": 2025,
+          "doc_type": "state report",
+          "score": 0.7574
+        },
+        {
+          "country": "Paraguay",
+          "year": 2023,
+          "doc_type": "state report",
+          "score": 0.734
+        },
+        {
+          "country": "Mongolia",
+          "year": 2023,
+          "doc_type": "state report",
+          "score": 0.7235
+        }
+      ],
+      "checks": {
+        "retrieval_hit": true,
+        "filter_year_respected": true
+      },
+      "passed": true,
+      "error": null
+    },
+    {
+      "id": "p3_s5",
+      "category": "semantic_search_empty",
+      "test_type": "search_empty",
+      "query": "quantum physics Schr\u00f6dinger equation",
+      "results_count": 8,
+      "top_results": [
+        {
+          "country": "Switzerland",
+          "year": 2016,
+          "doc_type": "state report",
+          "score": 0.1481
+        },
+        {
+          "country": "Mauritius",
+          "year": 2012,
+          "doc_type": "state report",
+          "score": 0.1463
+        },
+        {
+          "country": "Kazakhstan",
+          "year": 2017,
+          "doc_type": "state report",
+          "score": 0.146
+        }
+      ],
+      "checks": {
+        "off_topic_low_score": true,
+        "max_score": 0.1481
+      },
+      "passed": true,
+      "error": null
+    }
+  ]
+}

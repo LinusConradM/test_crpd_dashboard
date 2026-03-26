@@ -1,0 +1,360 @@
+{
+  "phase": 4,
+  "run_date": "2026-03-20",
+  "timestamp": "2026-03-20T02:20:14.641230+00:00",
+  "test_questions": 8,
+  "configs": {
+    "config_C": {
+      "embedding_model": "all-mpnet-base-v2",
+      "llm": "ollama/llama3.2",
+      "description": "Local LLM fallback: mpnet + Ollama",
+      "skipped": false,
+      "scores": {
+        "accuracy": 4.0,
+        "completeness": 3.5,
+        "relevance": 3.5,
+        "groundedness": 4.0,
+        "mrr": 0.625,
+        "ndcg_10": 0.9971,
+        "recall_5": 0.4844,
+        "recall_10": 0.625,
+        "precision_5": 0.525,
+        "avg_retrieval_latency_ms": 1207.0,
+        "avg_generation_latency_ms": 36502.6
+      },
+      "judge_avg": 3.75,
+      "ir_avg": 0.811,
+      "combined_score": 3.9025,
+      "per_question": [
+        {
+          "id": "p4_b1",
+          "category": "single_country_executive",
+          "countries": [
+            "Uganda"
+          ],
+          "articles": [],
+          "brief_format": "Executive Summary",
+          "search_query_used": "Uganda",
+          "chunks_retrieved": 4,
+          "retrieval_latency_ms": 3449.8,
+          "generation_latency_ms": 52530.1,
+          "tokens_used": 0,
+          "ir_metrics": {
+            "mrr": 1.0,
+            "ndcg_10": 1.0,
+            "recall_5": 1.0,
+            "recall_10": 1.0,
+            "precision_5": 0.2
+          },
+          "judge_scores": {
+            "accuracy": 4,
+            "completeness": 4,
+            "relevance": 4,
+            "groundedness": 4,
+            "notes": "The brief is well-structured and based on real CRPD state party reports and concluding observations, providing a clear overview of Uganda's progress in implementing the treaty's provisions. However, some claims may require further clarification or evidence to support them fully."
+          },
+          "brief_ok": true,
+          "brief_preview": "## CONTEXT\n\nThe Convention on the Rights of Persons with Disabilities (CRPD) is an international human rights treaty aimed at promoting the rights and dignity of persons with disabilities. The treaty has been ratified by Uganda, and the country has submitted its initial report to the Committee on the Rights of Persons with Disabilities (CRPD) in 2016. The report provides an overview of the state party's progress in implementing the treaty's provisions.\n\n## KEY FINDINGS\n\nThe CRPD Committee's conc",
+          "error": null
+        },
+        {
+          "id": "p4_b2",
+          "category": "single_country_article_focus",
+          "countries": [
+            "Kenya"
+          ],
+          "articles": [
+            "Article 24 \u2014 Education"
+          ],
+          "brief_format": "Executive Summary",
+          "search_query_used": "Kenya Article 24 \u2014 Education",
+          "chunks_retrieved": 8,
+          "retrieval_latency_ms": 1095.4,
+          "generation_latency_ms": 27857.9,
+          "tokens_used": 0,
+          "ir_metrics": {
+            "mrr": 1.0,
+            "ndcg_10": 1.0,
+            "recall_5": 0.625,
+            "recall_10": 1.0,
+            "precision_5": 1.0
+          },
+          "judge_scores": {
+            "error": "Judge parse failed: Expecting ',' delimiter: line 2 column 9 (char 23)",
+            "raw": "{\"dimensions\":\n[\"score\": 6, \"description\": \"The brief provides a good overview of Kenya's efforts to implement inclusive education policies and programs, as well as its ratification of international h"
+          },
+          "brief_ok": true,
+          "brief_preview": "## CONTEXT\n\nArticle 24 of the Convention on the Rights of Persons with Disabilities (CRPD) emphasizes the right to education for persons with disabilities, without discrimination and on an equal basis with others. The Government of Kenya recognizes this right and has made significant efforts to implement inclusive education policies and programs.\n\n## KEY FINDINGS\n\n1. Kenya has implemented free primary education (FPE) since 2003, which has improved access to education for vulnerable children, inc",
+          "error": null
+        },
+        {
+          "id": "p4_b3",
+          "category": "multi_country_regional",
+          "countries": [
+            "Nigeria",
+            "Ghana",
+            "Senegal"
+          ],
+          "articles": [],
+          "brief_format": "Full Report",
+          "search_query_used": "Nigeria Ghana Senegal",
+          "chunks_retrieved": 6,
+          "retrieval_latency_ms": 1038.7,
+          "generation_latency_ms": 23736.6,
+          "tokens_used": 0,
+          "ir_metrics": {
+            "mrr": 0.0,
+            "ndcg_10": 0.9767,
+            "recall_5": 0.0,
+            "recall_10": 0.0,
+            "precision_5": 0.0
+          },
+          "judge_scores": {
+            "context": {
+              "dimensions": {
+                "countries": [
+                  "Nigeria",
+                  "Ghana",
+                  "Senegal"
+                ],
+                "articles": [],
+                "period": "2015\u20132024",
+                "format": "Full Report"
+              },
+              "score": 8
+            },
+            "key_findings": {
+              "dimensions": {
+                "countries": [
+                  "Senegal"
+                ],
+                "articles": [],
+                "period": null,
+                "format": null
+              },
+              "score": 10
+            },
+            "recommendations": {
+              "dimensions": {
+                "countries": [
+                  "Senegal"
+                ],
+                "articles": [],
+                "period": null,
+                "format": null
+              },
+              "score": 9
+            },
+            "sources": {
+              "dimensions": {
+                "countries": [
+                  "Senegal"
+                ],
+                "articles": [],
+                "period": null,
+                "format": null
+              },
+              "score": 9
+            },
+            "overall_score": 8
+          },
+          "brief_ok": true,
+          "brief_preview": "## CONTEXT\n\nThis report provides an overview of the legal framework and policies in Senegal regarding the rights of persons with disabilities. It highlights the country's commitment to promoting the inclusion and participation of persons with disabilities in society, as well as its efforts to ensure equal access to public services and institutions.\n\n## KEY FINDINGS\n\n* Senegal's Constitution guarantees equal rights and freedoms for all citizens, including persons with disabilities.\n* The country ",
+          "error": null
+        },
+        {
+          "id": "p4_b4",
+          "category": "article_deep_dive",
+          "countries": [
+            "Brazil"
+          ],
+          "articles": [
+            "Article 12 \u2014 Equal Recognition Before the Law",
+            "Article 19 \u2014 Living Independently and Being Included in the Community"
+          ],
+          "brief_format": "Executive Summary",
+          "search_query_used": "Brazil Article 12 \u2014 Equal Recognition Before the Law Article 19 \u2014 Living Independently and Being Included in the Community",
+          "chunks_retrieved": 8,
+          "retrieval_latency_ms": 869.9,
+          "generation_latency_ms": 34018.4,
+          "tokens_used": 0,
+          "ir_metrics": {
+            "mrr": 1.0,
+            "ndcg_10": 1.0,
+            "recall_5": 0.625,
+            "recall_10": 1.0,
+            "precision_5": 1.0
+          },
+          "judge_scores": {
+            "recommendations": {
+              "accuracy": 0,
+              "completeness": 0,
+              "clarity": 0,
+              "relevance": 0
+            },
+            "sources": {
+              "accuracy": 1,
+              "completeness": 1,
+              "clarity": 1,
+              "relevance": 1
+            },
+            "key_findings": {
+              "accuracy": 0,
+              "completeness": 0,
+              "clarity": 0,
+              "relevance": 0
+            },
+            "context": {
+              "accuracy": 1,
+              "completeness": 1,
+              "clarity": 1,
+              "relevance": 1
+            }
+          },
+          "brief_ok": true,
+          "brief_preview": "## CONTEXT\n\nBrazil has made significant progress in promoting and protecting human rights, particularly in the area of disability rights. The country's commitment to the United Nations Convention on the Rights of Persons with Disabilities (CRPD) is reflected in its national human rights policy, known as the National Human Rights Policy III (PNDH-3). This policy aims to promote and protect the rights of persons with disabilities, including access to education, healthcare, and employment, as well ",
+          "error": null
+        },
+        {
+          "id": "p4_b5",
+          "category": "fact_sheet_format",
+          "countries": [
+            "India"
+          ],
+          "articles": [
+            "Article 9 \u2014 Accessibility"
+          ],
+          "brief_format": "Fact Sheet",
+          "search_query_used": "India Article 9 \u2014 Accessibility",
+          "chunks_retrieved": 5,
+          "retrieval_latency_ms": 460.2,
+          "generation_latency_ms": 39285.1,
+          "tokens_used": 0,
+          "ir_metrics": {
+            "mrr": 1.0,
+            "ndcg_10": 1.0,
+            "recall_5": 1.0,
+            "recall_10": 1.0,
+            "precision_5": 1.0
+          },
+          "judge_scores": {
+            "dimensions": {
+              "format": "Passing",
+              "context": "Passing",
+              "accessibility": "Partially Passing"
+            }
+          },
+          "brief_ok": true,
+          "brief_preview": "## CONTEXT\n\nThe Convention on the Rights of Persons with Disabilities (CRPD) was adopted by the United Nations in 2006, aiming to promote the rights and dignity of persons with disabilities worldwide. India ratified the CRPD in 2014 and submitted its initial report to the Committee on the Rights of Persons with Disabilities in 2019. The report highlights India's progress in implementing the CRPD, including the adoption of laws and policies, awareness-raising initiatives, and inclusive developmen",
+          "error": null
+        },
+        {
+          "id": "p4_b6",
+          "category": "temporal_range",
+          "countries": [
+            "Australia"
+          ],
+          "articles": [],
+          "brief_format": "Executive Summary",
+          "search_query_used": "Australia",
+          "chunks_retrieved": 8,
+          "retrieval_latency_ms": 638.4,
+          "generation_latency_ms": 39393.9,
+          "tokens_used": 0,
+          "ir_metrics": {
+            "mrr": 0.0,
+            "ndcg_10": 1.0,
+            "recall_5": 0.0,
+            "recall_10": 0.0,
+            "precision_5": 0.0
+          },
+          "judge_scores": {
+            "context": "Context is relevant to the specified 2010-2016 window.",
+            "keyFindings": "Key findings are relevant to the specified 2010-2016 window and reflect the early reporting period landscape.",
+            "recommendations": "Recommendations are relevant to the specified 2010-2016 window and reflect the early reporting period landscape.",
+            "sources": "Sources are relevant to the specified 2010-2016 window and include documents from within the range."
+          },
+          "brief_ok": true,
+          "brief_preview": "## CONTEXT\n\nThis report provides an overview of Australia's progress in implementing the United Nations Convention on the Rights of Persons with Disabilities (CRPD). The report highlights the government's efforts to promote the rights of persons with disabilities, including the development of the National Disability Strategy (NDS) and the establishment of the Australian Human Rights Commission (AHRC).\n\n## KEY FINDINGS\n\nThe report identifies several key findings, including:\n\n* Australia's ratific",
+          "error": null
+        },
+        {
+          "id": "p4_b7",
+          "category": "high_income_country",
+          "countries": [
+            "Germany"
+          ],
+          "articles": [
+            "Article 27 \u2014 Work and Employment"
+          ],
+          "brief_format": "Full Report",
+          "search_query_used": "Germany Article 27 \u2014 Work and Employment",
+          "chunks_retrieved": 8,
+          "retrieval_latency_ms": 1424.2,
+          "generation_latency_ms": 40420.4,
+          "tokens_used": 0,
+          "ir_metrics": {
+            "mrr": 1.0,
+            "ndcg_10": 1.0,
+            "recall_5": 0.625,
+            "recall_10": 1.0,
+            "precision_5": 1.0
+          },
+          "judge_scores": {
+            "context": "Full",
+            "key_findings": "Fair",
+            "recommendations": "Good",
+            "sources": "Fair"
+          },
+          "brief_ok": true,
+          "brief_preview": "## CONTEXT\n\nThe report on the implementation of the Convention on the Rights of Persons with Disabilities (CRPD) by Germany was submitted to the Committee on the Rights of Persons with Disabilities in 2011. The report provides an overview of the State party's efforts to implement the Convention's provisions, including the adoption of a national action plan, the appointment of a Federal Government Commissioner for Matters relating to Disabled Persons, and the amendment of laws to promote the righ",
+          "error": null
+        },
+        {
+          "id": "p4_b8",
+          "category": "small_island_state",
+          "countries": [
+            "Jamaica"
+          ],
+          "articles": [],
+          "brief_format": "Fact Sheet",
+          "search_query_used": "Jamaica",
+          "chunks_retrieved": 8,
+          "retrieval_latency_ms": 679.3,
+          "generation_latency_ms": 34778.4,
+          "tokens_used": 0,
+          "ir_metrics": {
+            "mrr": 0.0,
+            "ndcg_10": 1.0,
+            "recall_5": 0.0,
+            "recall_10": 0.0,
+            "precision_5": 0.0
+          },
+          "judge_scores": {
+            "accuracy": 4,
+            "completeness": 3,
+            "relevance": 3,
+            "groundedness": 4,
+            "notes": "The brief accurately summarizes key findings and recommendations from Jamaica's State Reports. However, the sources section is not exhaustive, and some recommendations seem to be based on general knowledge rather than specific data from the State Reports."
+          },
+          "brief_ok": true,
+          "brief_preview": "## CONTEXT\n\nThe Convention on the Rights of Persons with Disabilities (CRPD) was ratified by Jamaica in 2007. The country has been implementing various measures to promote the rights of persons with disabilities, including the establishment of the Jamaica Council for Persons with Disabilities (JCPD) and the passage of the Disabilities Act in 2014. Despite these efforts, concerns have been raised regarding the implementation of the CRPD in Jamaica, particularly with regards to the lack of a natio",
+          "error": null
+        }
+      ]
+    }
+  },
+  "winner": "config_C",
+  "recommendation": "config_C is the top performer (judge avg 3.75/5.0, IR avg 0.81/1.0). Both answer quality and retrieval meet targets. Deploy as production config.",
+  "acceptance_criteria": {
+    "mrr_target": 0.7,
+    "ndcg_target": 0.8,
+    "judge_avg_target": 3.5,
+    "winner_mrr": 0.625,
+    "winner_ndcg": 0.9971,
+    "winner_judge_avg": 3.75,
+    "mrr_met": false,
+    "ndcg_met": true,
+    "judge_met": true
+  }
+}

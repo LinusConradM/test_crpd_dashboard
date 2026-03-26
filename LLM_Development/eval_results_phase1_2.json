@@ -1,0 +1,302 @@
+{
+  "run_timestamp": "2026-03-19T04:26:49.910310+00:00",
+  "model": "llama-3.3-70b-versatile",
+  "data_context_preview": "DATASET OVERVIEW: 585 CRPD documents from 155 countries and 5 document types spanning 2010\u20132026.\n\nSUBMISSIONS BY YEAR: Peak was 2018 with 60 documents. Range: 2\u201360.\n\nDOCUMENTS BY REGION: Europe: 186, Asia: 160, Africa: 113, Americas: 96, Oceania: 30.\n\nDOCUMENT TYPES: state report: 172, concluding observations: 139, loi: 136, written response: 105, response to concluding observations: 33.",
+  "functional_tests": {
+    "rate_limit_guard": {
+      "passed": true,
+      "details": "SESSION_LIMIT=20. Guard correctly blocks at limit: True. Guard correctly allows under limit: True."
+    }
+  },
+  "metrics": {
+    "total_questions": 16,
+    "answered": 16,
+    "errors": 0,
+    "avg_accuracy": 4.75,
+    "avg_relevance": 4.62,
+    "avg_groundedness": 4.94,
+    "avg_completeness": 4.38,
+    "overall_avg": 4.67
+  },
+  "targets": {
+    "avg_accuracy": 3.5,
+    "avg_relevance": 3.5,
+    "avg_groundedness": 3.5,
+    "overall_avg": 3.5
+  },
+  "passed": true,
+  "questions": [
+    {
+      "id": "p1_q1",
+      "phase": 1,
+      "category": "insights",
+      "difficulty": "easy",
+      "question": "Based on the dataset overview, what are the key patterns in CRPD reporting?",
+      "criteria": "Should mention document count, countries, and year range from context. Must not invent statistics.",
+      "answer": "* The peak year for CRPD document submissions was 2018, with 60 documents submitted, indicating a significant increase in reporting activity that year.\n* Europe has submitted the most CRPD documents, with a total of 186 documents, accounting for nearly a third of all submissions.\n* State reports are the most common document type, with 172 submissions, followed closely by concluding observations, with 139 submissions.\n* The majority of document types have over 100 submissions, with the exception of responses to concluding observations, which have only 33 submissions, suggesting a potential gap in follow-up reporting.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 4,
+        "notes": "The answer accurately reflects the data context, directly addresses the question, and supports claims with provided data. However, it does not explicitly mention the total number of countries (155) or the full year range (2010-2026) as part of the key patterns."
+      }
+    },
+    {
+      "id": "p1_q2",
+      "phase": 1,
+      "category": "insights",
+      "difficulty": "medium",
+      "question": "Summarize the main trend in rights-based language adoption over the reporting period.",
+      "criteria": "Should cite rights-based percentage change from context. Must reference specific years.",
+      "answer": "* The peak year for CRPD document submissions was 2018, with 60 documents submitted, indicating a significant focus on disability rights reporting during that year.\n* Europe has submitted the most CRPD documents, with 186 documents, accounting for nearly a third of the total 585 documents submitted across all regions.\n* State reports are the most common document type, with 172 submissions, followed closely by concluding observations, with 139 submissions, highlighting the importance of these two document types in CRPD reporting.\n* The majority of document submissions, 446 out of 585, come from Europe, Asia, and Africa, with 186, 160, and 113 documents respectively, indicating a strong representation from these regions in CRPD reporting.",
+      "error": null,
+      "scores": {
+        "accuracy": 2,
+        "relevance": 1,
+        "groundedness": 4,
+        "completeness": 1,
+        "notes": "The answer does not address the question about rights-based language adoption trend, instead providing general statistics about CRPD document submissions."
+      }
+    },
+    {
+      "id": "p1_q3",
+      "phase": 1,
+      "category": "insights",
+      "difficulty": "easy",
+      "question": "Which regions have the most CRPD documentation based on this data?",
+      "criteria": "Should reference specific regions from context, not invent region names.",
+      "answer": "* The peak year for CRPD document submissions was 2018, with 60 documents submitted, indicating a significant increase in reporting activity during that year.\n* Europe has submitted the most CRPD documents, with a total of 186 documents, accounting for nearly a third of all submissions.\n* State reports are the most common document type, with 172 submissions, followed closely by concluding observations, which total 139 documents.\n* The Americas region has submitted the fewest CRPD documents, with a total of 96 documents, highlighting a potential need for increased reporting efforts in this region.",
+      "error": null,
+      "scores": {
+        "accuracy": 4,
+        "relevance": 3,
+        "groundedness": 5,
+        "completeness": 4,
+        "notes": "Answer accurately identifies Europe as the region with the most CRPD documents and correctly notes the number of documents from each region, but partially strays from the question by discussing document types and peak submission year."
+      }
+    },
+    {
+      "id": "p2_q1",
+      "phase": 2,
+      "category": "single_fact",
+      "difficulty": "easy",
+      "question": "Which year had the most CRPD document submissions?",
+      "criteria": "Should cite the peak year from context data, not guess.",
+      "answer": "According to the data, the year 2018 had the most CRPD document submissions, with a total of 60 documents submitted.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "notes": "Answer directly cites the peak year and document count from the provided context."
+      }
+    },
+    {
+      "id": "p2_q2",
+      "phase": 2,
+      "category": "single_fact",
+      "difficulty": "easy",
+      "question": "How many countries are represented in this dataset?",
+      "criteria": "Should match the country count from context exactly.",
+      "answer": "According to the dataset overview, there are 155 countries represented in this CRPD dataset.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "notes": "Directly matches the country count from the context"
+      }
+    },
+    {
+      "id": "p2_q3",
+      "phase": 2,
+      "category": "temporal",
+      "difficulty": "medium",
+      "question": "How has the volume of CRPD submissions changed over time?",
+      "criteria": "Should describe trend direction and reference at least one year range from context.",
+      "answer": "The volume of CRPD submissions has fluctuated over the years. According to the data, the peak year for submissions was 2018, with 60 documents submitted. The range of submissions per year varies significantly, from a low of 2 documents to the high of 60 in 2018. This suggests that there has been variability in the pace of submissions over the 2010-2026 period.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 4,
+        "notes": "Answer accurately describes trend direction and references specific year and range from context, but does not provide a detailed analysis of the overall trend beyond the peak year."
+      }
+    },
+    {
+      "id": "p2_q4",
+      "phase": 2,
+      "category": "framing",
+      "difficulty": "medium",
+      "question": "What percentage shift in rights-based vs medical-model language has occurred?",
+      "criteria": "Should cite specific percentages from context if available; if not available should say so.",
+      "answer": "The data context provided does not include information on the language used in the CRPD documents, specifically the shift from medical-model to rights-based language. Therefore, it is not possible to determine the percentage shift using the available data. More detailed information on the content and language used in the documents would be required to answer this question.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "notes": "Answer correctly acknowledges limitations of the data context and declines to provide a speculative response."
+      }
+    },
+    {
+      "id": "p2_q5",
+      "phase": 2,
+      "category": "framing",
+      "difficulty": "hard",
+      "question": "Which region shows the highest growth in rights-based language?",
+      "criteria": "Should use context data if region framing is available; otherwise acknowledge data limitation.",
+      "answer": "The data context provided does not include information on the growth of rights-based language by region. The available data includes the number of documents by region, but it does not provide insight into the content or language used within those documents. To answer this question, more specific data on the content and trends of the CRPD documents would be needed.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "notes": "Correctly acknowledges data limitation and does not invent information."
+      }
+    },
+    {
+      "id": "p2_q6",
+      "phase": 2,
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "question": "What is the GDP of Germany?",
+      "criteria": "Should decline to answer or clearly state this is outside the CRPD dataset scope.",
+      "answer": "The provided data context is insufficient to answer your question about Germany's GDP, as it only includes information about CRPD documents and their distribution by year, region, and type. It does not contain economic data such as GDP.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "notes": "Correctly declines to answer and acknowledges the limitation of the provided data context."
+      }
+    },
+    {
+      "id": "p2_q7",
+      "phase": 2,
+      "category": "requires_rag",
+      "difficulty": "medium",
+      "question": "Can you quote specific text from a State Report by Kenya about inclusive education?",
+      "criteria": "Should acknowledge inability to quote documents without document-level access (RAG not yet available).",
+      "answer": "The data context provided does not include specific text from individual documents, such as State Reports by Kenya. It only provides aggregated statistics about the number and types of documents submitted. Therefore, I cannot quote specific text from a State Report by Kenya about inclusive education.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "notes": "Correctly acknowledges limitation and declines to invent or quote non-existent information"
+      }
+    },
+    {
+      "id": "p2_q8",
+      "phase": 2,
+      "category": "starter",
+      "difficulty": "hard",
+      "question": "Which region shows the highest growth in rights-based language?",
+      "criteria": "Should use available context; acknowledge if region-level framing breakdown is absent.",
+      "answer": "The data context provided does not include information on the growth of rights-based language by region. The available data includes the number of documents by region, but it does not provide insight into the content or language used within those documents. To assess growth in rights-based language, more specific data on the content and trends within the documents would be necessary.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "notes": "Correctly acknowledges limitation in data context"
+      }
+    },
+    {
+      "id": "p2_q9",
+      "phase": 2,
+      "category": "starter",
+      "difficulty": "hard",
+      "question": "Are there countries that submitted State Reports but never received Concluding Observations?",
+      "criteria": "Should acknowledge this requires per-country document type cross-tabulation; use context if available.",
+      "answer": "The data context does not provide direct information on country-level submissions or the specific interactions between State Reports and Concluding Observations. It only offers aggregated statistics on document types and regional distributions. To determine if countries submitted State Reports without receiving Concluding Observations, more detailed data on individual country submissions and their corresponding outcomes would be necessary. The current data is insufficient to answer this question.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "notes": "Correctly acknowledges the limitation of the provided data context and the need for more detailed information to answer the question."
+      }
+    },
+    {
+      "id": "p2_q10",
+      "phase": 2,
+      "category": "multiturn_t1",
+      "difficulty": "medium",
+      "question": "How has the volume of CRPD submissions changed over time?",
+      "criteria": "First turn of a multi-turn sequence. Should reference year range and trends from context.",
+      "answer": "The data indicates that the volume of CRPD submissions has fluctuated over the years. The peak year for submissions was 2018, with 60 documents submitted. The range of submissions per year varies significantly, from a low of 2 documents to the high of 60 in 2018. This suggests that there is no consistent trend in the volume of submissions over time, with some years seeing significantly more activity than others.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 4,
+        "notes": "Answer accurately reflects the fluctuation in CRPD submissions over time, referencing the peak year and range, but could further elaborate on the overall trend across the 2010-2026 period."
+      }
+    },
+    {
+      "id": "p2_q10b",
+      "phase": 2,
+      "category": "multiturn_t2",
+      "difficulty": "medium",
+      "question": "Can you break that down by document type?",
+      "criteria": "Should reference the previous answer in context; if doc type breakdown unavailable should say so clearly.",
+      "answer": "The data does not provide a breakdown of submissions by document type and year. It only provides the overall number of submissions by year and the total number of documents by type. For example, we know that there are 172 state reports, 139 concluding observations, and so on, but we cannot determine how these document types are distributed across the years. To analyze the trend by document type, more detailed data would be required.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 5,
+        "notes": "Answer correctly states the limitation of the data context and clearly explains what is and isn't possible to determine."
+      }
+    },
+    {
+      "id": "p2_q11",
+      "phase": 2,
+      "category": "multiturn_t1",
+      "difficulty": "easy",
+      "question": "What are the key findings from this CRPD data?",
+      "criteria": "Should summarize key metrics from context \u2014 documents, countries, year range, model framing.",
+      "answer": "The key findings from this CRPD data indicate a significant level of engagement from countries across various regions. Europe has the highest number of documents submitted, with 186, followed by Asia with 160, and Africa with 113. This suggests that countries in these regions are actively participating in the CRPD reporting process. \n\nNotably, the peak year for submissions was 2018, with 60 documents, indicating a potential increase in awareness and commitment to disability rights around that time. The distribution of document types shows that state reports and concluding observations are the most common, with 172 and 139 documents, respectively. This highlights the importance of these documents in the CRPD reporting process, which is crucial for promoting and protecting the rights of persons with disabilities.\n\nThe data also reveals a relatively low number of responses to concluding observations, with only 33 documents. This could indicate an area for improvement, as responding to concluding observations is essential for countries to demonstrate their commitment to implementing the Committee's recommendations and advancing disability rights. Overall, the data provides insights into the CRPD reporting trends and highlights the need for continued efforts to promote disability rights and inclusivity.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 4,
+        "notes": "The answer accurately summarizes key metrics from the context, including documents, countries, and year range, but does not explicitly mention the total number of countries (155) or the total number of documents (585) in the dataset."
+      }
+    },
+    {
+      "id": "p2_q11b",
+      "phase": 2,
+      "category": "multiturn_t2",
+      "difficulty": "hard",
+      "question": "Which of those findings is most significant for disability policy?",
+      "criteria": "Should build on prior answer; provide policy-relevant framing without hallucinating.",
+      "answer": "The most significant finding for disability policy is the relatively low number of responses to concluding observations, with only 33 documents. This is significant because concluding observations are a crucial component of the CRPD reporting process, as they provide recommendations for countries to improve their implementation of the Convention. The response to concluding observations is an opportunity for countries to demonstrate their commitment to addressing the concerns and recommendations raised by the Committee.\n\nA low number of responses may indicate that countries are not adequately following up on the Committee's recommendations, which could hinder the progress of disability rights in those countries. This finding highlights the need for countries to prioritize the implementation of the Committee's recommendations and to provide regular updates on their progress, which is essential for promoting and protecting the rights of persons with disabilities.",
+      "error": null,
+      "scores": {
+        "accuracy": 5,
+        "relevance": 5,
+        "groundedness": 5,
+        "completeness": 4,
+        "notes": "Answer accurately identifies a significant finding, remains relevant, and is grounded in the data context, but could further explore implications or compare with other document types."
+      }
+    }
+  ]
+}

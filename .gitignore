@@ -3,3 +3,20 @@ __pycache__/
 .DS_Store
 .env
 *.log
+.streamlit/secrets.toml
+
+# Claude Code internal files
+.claude/worktrees/
+.claude/skills/
+
+# PDF → Markdown conversions — already chunked into chunks_metadata.json
+data/markdown/
+
+# Old FAISS index from previous embedding model — no code references it
+data/faiss_index_minilm.bin
+
+# Dev artifacts — not needed to run or test the app
+Dashboard Documents/
+CRPD Application Documentation/
+stitch_UI/
+docs/design-references/

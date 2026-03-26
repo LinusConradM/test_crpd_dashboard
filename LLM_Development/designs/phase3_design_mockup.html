@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Phase 3 — RAG + Semantic Search Design</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #eef0f5;
+    color: #1a1a2e;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  /* ── HEADER ── */
+  .doc-header {
+    background: #005bbb;
+    color: #fff;
+    border-radius: 12px;
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .doc-header .phase-tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+  }
+  .doc-header h1 { font-size: 22px; font-weight: 700; }
+  .doc-header p  { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+
+  /* ── SCREEN LABEL ── */
+  .screen-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #005bbb;
+  }
+  .screen-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #c2c6d4;
+  }
+
+  /* ── BROWSER CHROME ── */
+  .browser {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  }
+  .browser-bar {
+    background: #f1f3f7;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #dde1ea;
+  }
+  .browser-dots { display: flex; gap: 6px; }
+  .browser-dots span {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    display: block;
+  }
+  .browser-dots span:nth-child(1) { background: #ff5f57; }
+  .browser-dots span:nth-child(2) { background: #febc2e; }
+  .browser-dots span:nth-child(3) { background: #28c840; }
+  .browser-url {
+    background: #fff;
+    border: 1px solid #dde1ea;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: #555;
+    flex: 1;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ── NAV BAR ── */
+  .navbar {
+    background: #005bbb;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 52px;
+  }
+  .navbar .brand {
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    margin-right: 32px;
+    letter-spacing: 0.5px;
+  }
+  .navbar .nav-link {
+    color: rgba(255,255,255,0.75);
+    font-size: 13px;
+    padding: 0 16px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+  }
+  .navbar .nav-link.active {
+    color: #fff;
+    border-bottom-color: #fff;
+    font-weight: 600;
+  }
+
+  /* ── PAGE BODY ── */
+  .page-body {
+    padding: 24px 32px;
+    background: #f8f9fa;
+    min-height: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ─────────────────────────────────────────────
+     SCREEN 1  —  CHAT WITH RAG CITATIONS
+  ───────────────────────────────────────────── */
+  .chat-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 16px;
+  }
+
+  /* Sample question cards (left col) */
+  .starter-cards { display: flex; flex-direction: column; gap: 10px; }
+  .starter-card {
+    background: #F2F4F8;
+    border: 1px solid rgba(194,198,212,0.4);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+  .starter-icon {
+    width: 36px; height: 36px;
+    background: #005bbb;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .starter-icon svg { width: 18px; height: 18px; fill: #fff; }
+  .starter-text {}
+  .starter-title { font-size: 11px; font-weight: 700; color: #1a1a2e; }
+  .starter-q { font-size: 11px; color: #6b7280; margin-top: 2px; line-height: 1.4; }
+
+  /* Chat card (right col) */
+  .chat-card {
+    background: #fff;
+    border: 1px solid #dde1ea;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .chat-card-header {
+    background: #005bbb;
+    color: #fff;
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chat-card-header svg { width: 16px; height: 16px; fill: #fff; opacity: 0.85; }
+  .chat-messages {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* User message bubble */
+  .msg-user {
+    align-self: flex-end;
+    background: #005bbb;
+    color: #fff;
+    border-radius: 16px 16px 4px 16px;
+    padding: 10px 14px;
+    font-size: 13px;
+    max-width: 80%;
+  }
+
+  /* Assistant message */
+  .msg-assistant {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 95%;
+  }
+  .msg-assistant-bubble {
+    background: #f8f9fa;
+    border: 1px solid #eaecf0;
+    border-radius: 4px 16px 16px 16px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #1a1a2e;
+  }
+
+  /* ── NEW: RAG Citations Panel ── */
+  .citations-panel {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .citations-header {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #92400e;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .citations-header svg { width: 12px; height: 12px; fill: #92400e; }
+  .citation-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(253,230,138,0.5);
+  }
+  .citation-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .citation-source {
+    font-size: 10px;
+    font-weight: 700;
+    color: #b45309;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .citation-text {
+    font-size: 11px;
+    color: #555;
+    line-height: 1.45;
+  }
+
+  /* Relevance score pill */
+  .score-pill {
+    display: inline-block;
+    background: #d1fae5;
+    color: #065f46;
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: 99px;
+    padding: 1px 7px;
+    font-family: 'IBM Plex Mono', monospace;
+    margin-left: 6px;
+  }
+
+  /* Input row */
+  .chat-input-row {
+    padding: 12px 16px;
+    border-top: 1px solid #eaecf0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .chat-input {
+    flex: 1;
+    background: #f8f9fa;
+    border: 1px solid #dde1ea;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    color: #9ca3af;
+  }
+  .chat-send-btn {
+    background: #005bbb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .chat-send-btn svg { width: 13px; height: 13px; fill: #fff; }
+
+  /* annotation callout */
+  .annotation {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: rgba(0,91,187,0.06);
+    border-left: 3px solid #005bbb;
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    font-size: 11.5px;
+    color: #005bbb;
+    font-weight: 500;
+  }
+  .annotation .anno-num {
+    background: #005bbb;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 50%;
+    width: 17px;
+    height: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ─────────────────────────────────────────────
+     SCREEN 2  —  DOCUMENT EXPLORER / SEMANTIC SEARCH
+  ───────────────────────────────────────────── */
+
+  /* Sub-tab bar */
+  .subtab-bar {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #dde1ea;
+    margin-bottom: 16px;
+  }
+  .subtab {
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+  }
+  .subtab.active {
+    color: #005bbb;
+    font-weight: 700;
+    border-bottom-color: #005bbb;
+  }
+
+  /* Semantic search bar */
+  .semantic-search-section {
+    background: #fff;
+    border: 1px solid #dde1ea;
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .sem-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sem-label-badge {
+    background: #ede9fe;
+    color: #6d28d9;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border-radius: 99px;
+    padding: 2px 8px;
+    text-transform: uppercase;
+  }
+  .sem-search-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .sem-input {
+    flex: 1;
+    background: #f8f9fa;
+    border: 2px solid #005bbb;
+    border-radius: 10px;
+    padding: 11px 16px;
+    font-size: 13.5px;
+    color: #1a1a2e;
+    font-family: 'Inter', sans-serif;
+  }
+  .sem-search-btn {
+    background: #005bbb;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .sem-search-btn svg { width: 14px; height: 14px; fill: #fff; }
+
+  /* Filters row */
+  .filters-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .filter-chip {
+    background: #f1f3f7;
+    border: 1px solid #dde1ea;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 11.5px;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .filter-chip select-arrow {
+    color: #9ca3af;
+    font-size: 10px;
+  }
+  .filter-chip.selected {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1e40af;
+    font-weight: 600;
+  }
+
+  /* Search results */
+  .search-results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .results-count {
+    font-size: 12px;
+    color: #6b7280;
+  }
+  .results-count strong { color: #1a1a2e; }
+  .sort-label {
+    font-size: 11px;
+    color: #9ca3af;
+  }
+
+  .result-card {
+    background: #fff;
+    border: 1px solid #dde1ea;
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    transition: box-shadow 0.15s;
+  }
+  .result-card:hover { box-shadow: 0 2px 10px rgba(0,91,187,0.10); }
+  .result-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .result-doc-id {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #9ca3af;
+    font-weight: 500;
+  }
+  .result-country {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+  .result-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .meta-pill {
+    background: #f1f3f7;
+    border-radius: 99px;
+    padding: 2px 9px;
+    font-size: 10.5px;
+    color: #374151;
+    font-weight: 500;
+  }
+  .meta-pill.type-state { background: #dbeafe; color: #1e40af; }
+  .meta-pill.type-parallel { background: #fce7f3; color: #9d174d; }
+  .result-snippet {
+    font-size: 12px;
+    color: #4b5563;
+    line-height: 1.55;
+    border-left: 3px solid #e5e7eb;
+    padding-left: 10px;
+  }
+  .result-snippet mark {
+    background: #fef9c3;
+    color: inherit;
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+  .result-score-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .score-bar-track {
+    flex: 1;
+    height: 4px;
+    background: #f1f3f7;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .score-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #005bbb, #4fa8e0);
+    border-radius: 99px;
+  }
+  .score-val {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #6b7280;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .results-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Legend / annotation box */
+  .anno-box {
+    background: rgba(109,40,217,0.06);
+    border: 1px solid rgba(109,40,217,0.18);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .anno-box-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6d28d9;
+  }
+  .anno-box ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .anno-box ul li {
+    font-size: 11px;
+    color: #5b21b6;
+    padding-left: 14px;
+    position: relative;
+  }
+  .anno-box ul li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: #a78bfa;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── DOC HEADER ── -->
+<div class="doc-header">
+  <div class="phase-tag">CRPD Dashboard · LLM Development · Phase 3 Design</div>
+  <h1>RAG + Semantic Search</h1>
+  <p>Two UI surfaces: (1) Chat page with grounded answers + source citations &nbsp;|&nbsp; (2) Document Explorer semantic search bar with ranked results</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 1 — CHAT WITH RAG CITATIONS
+══════════════════════════════════════════ -->
+<div class="screen-label">Screen 1 &nbsp;—&nbsp; AI Assistant · Chat Page (upgraded with RAG)</div>
+
+<div class="browser">
+  <div class="browser-bar">
+    <div class="browser-dots"><span></span><span></span><span></span></div>
+    <div class="browser-url">idpp.connect.posit.cloud/crpd-dashboard/?page=chat</div>
+  </div>
+
+  <!-- nav -->
+  <div class="navbar">
+    <div class="brand">CRPD Dashboard</div>
+    <div class="nav-link">Overview</div>
+    <div class="nav-link">Countries</div>
+    <div class="nav-link">Analysis</div>
+    <div class="nav-link active">AI Assistant</div>
+    <div class="nav-link">About</div>
+  </div>
+
+  <div class="page-body">
+    <div class="chat-layout">
+
+      <!-- LEFT: starter cards -->
+      <div class="starter-cards">
+
+        <div class="starter-card">
+          <div class="starter-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 14.93V15a1 1 0 0 0-2 0v1.93A8.001 8.001 0 0 1 4.07 11H6a1 1 0 0 0 0-2H4.07A8.001 8.001 0 0 1 11 4.07V6a1 1 0 0 0 2 0V4.07A8.001 8.001 0 0 1 19.93 11H18a1 1 0 0 0 0 2h1.93A8.001 8.001 0 0 1 13 16.93z"/></svg>
+          </div>
+          <div class="starter-text">
+            <div class="starter-title">Submission Trends</div>
+            <div class="starter-q">Which regions show the fastest growth in CRPD reporting?</div>
+          </div>
+        </div>
+
+        <div class="starter-card">
+          <div class="starter-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2 5 5h-5V4zm-3 9H8v-2h2v2zm6 0h-4v-2h4v2zm0 4H8v-2h8v2z"/></svg>
+          </div>
+          <div class="starter-text">
+            <div class="starter-title">Article Coverage</div>
+            <div class="starter-q">What are the most cited CRPD articles in African state reports?</div>
+          </div>
+        </div>
+
+        <div class="starter-card">
+          <div class="starter-icon">
+            <svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+          </div>
+          <div class="starter-text">
+            <div class="starter-title">Reporting Gaps</div>
+            <div class="starter-q">Which countries have not submitted any reports since 2018?</div>
+          </div>
+        </div>
+
+        <div class="starter-card">
+          <div class="starter-icon">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          </div>
+          <div class="starter-text">
+            <div class="starter-title">Rights-Based Model</div>
+            <div class="starter-q">How has rights-based language evolved in Latin America?</div>
+          </div>
+        </div>
+
+        <div class="starter-card">
+          <div class="starter-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-8v4h4l-5 8z"/></svg>
+          </div>
+          <div class="starter-text">
+            <div class="starter-title">Policy Gaps</div>
+            <div class="starter-q">What disability employment policies are mentioned across reports?</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: chat card with RAG -->
+      <div class="chat-card">
+        <div class="chat-card-header">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          AI Assistant — CRPD Document Intelligence
+        </div>
+
+        <div class="chat-messages">
+
+          <!-- User question -->
+          <div class="msg-user">
+            How has rights-based language evolved in African state party reports since 2015?
+          </div>
+
+          <!-- Assistant answer (RAG-grounded) -->
+          <div class="msg-assistant">
+            <div class="msg-assistant-bubble">
+              Across African state party reports from 2015–2024, rights-based language has seen a measurable shift. Early reports (2015–2018) predominantly used medical-model framing — referring to persons with disabilities as "patients," "beneficiaries," or "special needs" populations. By 2021–2024, countries like Kenya, Ghana, and South Africa moved toward rights-based terminology: "rights holders," "reasonable accommodation," and direct citation of CRPD Article 5 (non-discrimination) increased by ~38%.
+              <br/><br/>
+              Kenya's 2022 state report is the strongest example, explicitly referencing the social model of disability throughout — a direct departure from its 2016 report which framed disability primarily through a health lens.
+            </div>
+
+            <!-- ★ NEW: RAG Citations Panel ★ -->
+            <div class="citations-panel">
+              <div class="citations-header">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2 5 5h-5V4z"/></svg>
+                Retrieved Sources &nbsp;<span style="font-weight:400;color:#b45309;font-size:9px;text-transform:none;letter-spacing:0">8 chunks · top 3 shown</span>
+              </div>
+
+              <div class="citation-item">
+                <div class="citation-source">
+                  [Source 1: Kenya, 2022, State Party Report]
+                  <span class="score-pill">sim 0.91</span>
+                </div>
+                <div class="citation-text">"…persons with disabilities are rights holders under CRPD and the State is obligated to provide reasonable accommodation in all public services…"</div>
+              </div>
+
+              <div class="citation-item">
+                <div class="citation-source">
+                  [Source 2: Ghana, 2021, State Party Report]
+                  <span class="score-pill">sim 0.87</span>
+                </div>
+                <div class="citation-text">"…the Disability Act 715 has been aligned with the social model of disability, moving away from the charitable approach…"</div>
+              </div>
+
+              <div class="citation-item">
+                <div class="citation-source">
+                  [Source 3: South Africa, 2020, State Party Report]
+                  <span class="score-pill">sim 0.83</span>
+                </div>
+                <div class="citation-text">"…disability is understood as the interaction between impairment and attitudinal/environmental barriers, consistent with the CRPD preamble…"</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="chat-input-row">
+          <div class="chat-input">Ask a follow-up question…</div>
+          <button class="chat-send-btn">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            Send
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Annotations -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+      <div class="annotation">
+        <div class="anno-num">1</div>
+        <div><strong>RAG answer:</strong> LLM response now grounded in actual document excerpts via FAISS semantic retrieval — not just CSV metadata. Citations are automatically appended below every answer.</div>
+      </div>
+      <div class="annotation">
+        <div class="anno-num">2</div>
+        <div><strong>Citations panel:</strong> Shows top-k retrieved chunks (default 8, top 3 displayed). Each citation shows: country, year, doc type, similarity score, and verbatim excerpt.</div>
+      </div>
+      <div class="annotation">
+        <div class="anno-num">3</div>
+        <div><strong>Similarity score pill:</strong> Cosine similarity from FAISS IndexFlatIP. Scores ≥ 0.75 are highlighted green — signals high-confidence retrieval to the user.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCREEN 2 — DOCUMENT EXPLORER / SEMANTIC SEARCH
+══════════════════════════════════════════ -->
+<div class="screen-label" style="margin-top:8px;">Screen 2 &nbsp;—&nbsp; Document Explorer · Semantic Search Sub-tab (tab_explore.py)</div>
+
+<div class="browser">
+  <div class="browser-bar">
+    <div class="browser-dots"><span></span><span></span><span></span></div>
+    <div class="browser-url">idpp.connect.posit.cloud/crpd-dashboard/?page=countries&sub=search</div>
+  </div>
+
+  <div class="navbar">
+    <div class="brand">CRPD Dashboard</div>
+    <div class="nav-link">Overview</div>
+    <div class="nav-link active">Countries</div>
+    <div class="nav-link">Analysis</div>
+    <div class="nav-link">AI Assistant</div>
+    <div class="nav-link">About</div>
+  </div>
+
+  <div class="page-body">
+
+    <!-- Sub-tab bar -->
+    <div class="subtab-bar">
+      <div class="subtab">Map View</div>
+      <div class="subtab">Submission Trends</div>
+      <div class="subtab">Country Profiles</div>
+      <div class="subtab active">Semantic Search ✦</div>
+    </div>
+
+    <!-- Semantic search input -->
+    <div class="semantic-search-section">
+      <div class="sem-label">
+        Find documents by meaning
+        <span class="sem-label-badge">AI · Semantic</span>
+      </div>
+      <div class="sem-search-bar">
+        <div class="sem-input">rights-based employment policies for persons with disabilities</div>
+        <button class="sem-search-btn">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          Search
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-row">
+        <span style="font-size:11px;color:#9ca3af;font-weight:600;">Filters:</span>
+        <div class="filter-chip">Region: All ▾</div>
+        <div class="filter-chip selected">Doc Type: State Party ✕</div>
+        <div class="filter-chip">Year: 2015 – 2024 ▾</div>
+        <div class="filter-chip">Country: All ▾</div>
+        <div style="flex:1;"></div>
+        <span style="font-size:11px;color:#9ca3af;">Top K: <strong style="color:#374151;">8</strong></span>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="search-results-header">
+      <div class="results-count">Showing <strong>8</strong> of <strong>506</strong> documents · sorted by semantic similarity</div>
+      <div class="sort-label">Model: all-mpnet-base-v2 · FAISS IndexFlatIP</div>
+    </div>
+
+    <div class="results-grid">
+
+      <!-- Result 1 -->
+      <div class="result-card">
+        <div class="result-card-top">
+          <div>
+            <div class="result-doc-id">CRPD/C/KEN/1 · chunk 14/42</div>
+            <div class="result-country">Kenya &nbsp;<span style="font-weight:400;color:#6b7280;font-size:12px;">2022</span></div>
+          </div>
+          <div class="meta-pill type-state">State Party</div>
+        </div>
+        <div class="result-meta">
+          <div class="meta-pill">Africa</div>
+          <div class="meta-pill">Article 27 — Work & Employment</div>
+          <div class="meta-pill">Article 5 — Equality</div>
+        </div>
+        <div class="result-snippet">
+          "…the National Employment Policy for Persons with Disabilities (2021) mandates a <mark>5% employment quota</mark> in public institutions and requires <mark>reasonable accommodation</mark> at all stages of recruitment…"
+        </div>
+        <div class="result-score-bar">
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:91%;"></div></div>
+          <div class="score-val">sim 0.91 ●</div>
+        </div>
+      </div>
+
+      <!-- Result 2 -->
+      <div class="result-card">
+        <div class="result-card-top">
+          <div>
+            <div class="result-doc-id">CRPD/C/GHA/1 · chunk 8/38</div>
+            <div class="result-country">Ghana &nbsp;<span style="font-weight:400;color:#6b7280;font-size:12px;">2021</span></div>
+          </div>
+          <div class="meta-pill type-state">State Party</div>
+        </div>
+        <div class="result-meta">
+          <div class="meta-pill">Africa</div>
+          <div class="meta-pill">Article 27 — Work & Employment</div>
+        </div>
+        <div class="result-snippet">
+          "…the Persons with Disability Act mandates that at least <mark>3% of employees</mark> in all public sector organisations shall be <mark>persons with disabilities</mark>, with targeted vocational training programmes…"
+        </div>
+        <div class="result-score-bar">
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:87%;"></div></div>
+          <div class="score-val">sim 0.87 ●</div>
+        </div>
+      </div>
+
+      <!-- Result 3 -->
+      <div class="result-card">
+        <div class="result-card-top">
+          <div>
+            <div class="result-doc-id">CRPD/C/ZAF/1 · chunk 21/51</div>
+            <div class="result-country">South Africa &nbsp;<span style="font-weight:400;color:#6b7280;font-size:12px;">2020</span></div>
+          </div>
+          <div class="meta-pill type-parallel">Parallel Report</div>
+        </div>
+        <div class="result-meta">
+          <div class="meta-pill">Africa</div>
+          <div class="meta-pill">Article 27 — Work & Employment</div>
+          <div class="meta-pill">Article 28 — Social Protection</div>
+        </div>
+        <div class="result-snippet">
+          "…Employment Equity targets remain unmet; only 1.3% of the formal workforce are persons with disabilities against a 2% target. Civil society recommends <mark>rights-based enforcement mechanisms</mark>…"
+        </div>
+        <div class="result-score-bar">
+          <div class="score-bar-track"><div class="score-bar-fill" style="width:83%;"></div></div>
+          <div class="score-val">sim 0.83</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Design notes -->
+    <div class="anno-box" style="margin-top:8px;">
+      <div class="anno-box-title">Implementation Notes — Semantic Search Tab</div>
+      <ul>
+        <li>New sub-tab added to <code style="font-size:10px;background:rgba(109,40,217,0.08);padding:1px 4px;border-radius:3px;">tab_explore.py</code> at route <code style="font-size:10px;background:rgba(109,40,217,0.08);padding:1px 4px;border-radius:3px;">?page=countries&sub=search</code></li>
+        <li>Search bar calls <code style="font-size:10px;background:rgba(109,40,217,0.08);padding:1px 4px;border-radius:3px;">semantic_search(query, top_k=8, filter_*)</code> from <code style="font-size:10px;background:rgba(109,40,217,0.08);padding:1px 4px;border-radius:3px;">src/llm.py</code></li>
+        <li>Results sorted by FAISS cosine similarity score; score bar shows relative relevance</li>
+        <li>Each result card links to the full document chunk metadata (country, year, doc_type, articles detected)</li>
+        <li>Filter chips map to <code style="font-size:10px;background:rgba(109,40,217,0.08);padding:1px 4px;border-radius:3px;">filter_country</code>, <code style="font-size:10px;background:rgba(109,40,217,0.08);padding:1px 4px;border-radius:3px;">filter_doc_type</code>, <code style="font-size:10px;background:rgba(109,40,217,0.08);padding:1px 4px;border-radius:3px;">filter_year_min/max</code> params</li>
+        <li>Embedding model: <code style="font-size:10px;background:rgba(109,40,217,0.08);padding:1px 4px;border-radius:3px;">all-mpnet-base-v2</code> (768-dim) — loaded once at startup via <code style="font-size:10px;background:rgba(109,40,217,0.08);padding:1px 4px;border-radius:3px;">@st.cache_resource</code></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

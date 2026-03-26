@@ -1,0 +1,4 @@
+data/faiss_index.bin filter=lfs diff=lfs merge=lfs -text
+data/embeddings.npy filter=lfs diff=lfs merge=lfs -text
+data/chunks_metadata.json filter=lfs diff=lfs merge=lfs -text
+data/faiss_index_minilm.bin filter=lfs diff=lfs merge=lfs -text
