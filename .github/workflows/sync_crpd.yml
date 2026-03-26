@@ -23,10 +23,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Cache pip dependencies
         uses: actions/cache@v4
@@ -40,11 +40,11 @@ jobs:
 
       - name: Run sync (dry run)
         if: ${{ github.event.inputs.dry_run == 'true' }}
-        run: python LLM_Development/sync_new_documents.py --dry-run
+        run: python scripts/sync_new_documents.py --dry-run
 
       - name: Run full sync
         if: ${{ github.event.inputs.dry_run != 'true' }}
-        run: python LLM_Development/sync_new_documents.py
+        run: python scripts/sync_new_documents.py
 
       - name: Commit updated data files
         if: ${{ github.event.inputs.dry_run != 'true' }}

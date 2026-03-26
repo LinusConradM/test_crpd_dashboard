@@ -98,7 +98,7 @@ def _base_layout(title: str, lens: str) -> dict:
 
 def _save(fig: go.Figure, filename: str) -> None:
     out = CHARTS_DIR / filename
-    fig.write_html(str(out), include_plotlyjs="cdn")
+    fig.write_html(str(out), include_plotlyjs=True)
     print(f"  Saved → {out}")
 
 

@@ -345,7 +345,7 @@
     }
   },
   "winner": "config_C",
-  "recommendation": "config_C is the top performer (judge avg 3.75/5.0, IR avg 0.81/1.0). Both answer quality and retrieval meet targets. Deploy as production config.",
+  "recommendation": "config_C is the top performer (judge avg 3.75/5.0, IR avg 0.81/1.0). Answer quality and NDCG meet targets; MRR (0.625) is below the 0.7 threshold. Deploy as production config with MRR improvement as a follow-up.",
   "acceptance_criteria": {
     "mrr_target": 0.7,
     "ndcg_target": 0.8,

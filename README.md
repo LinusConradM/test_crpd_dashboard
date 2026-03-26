@@ -10,10 +10,10 @@ researchers, and policy advocates.
 ## Project Overview
 
 This interactive Streamlit dashboard analyzes CRPD reporting patterns across
-150+ States Parties and 5 document types (2010–2026). It combines corpus
-linguistics, NLP, and AI-powered retrieval to surface treaty compliance trends,
-rights-based language shifts, and cross-country comparisons from the full CRPD
-reporting cycle.
+States Parties and multiple document types. It combines corpus linguistics,
+NLP, and AI-powered retrieval to surface treaty compliance trends, rights-based
+language shifts, and cross-country comparisons from the full CRPD reporting
+cycle.
 
 > Exact dataset counts (countries, documents, year range) are dynamic and
 > computed at runtime via `get_dataset_stats()` in `src/data_loader.py`.

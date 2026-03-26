@@ -8,10 +8,10 @@ Usage:
     python LLM_Development/build_knowledge_base.py --pdf-dir data/pdfs --resume
 
 Outputs (written to data/):
-    faiss_index.bin       — FAISS IndexFlatIP (~20 MB)
-    embeddings.npy        — All chunk vectors (~25 MB, shape: N×768)
-    chunks_metadata.json  — Chunk text + metadata (country, year, doc_type, …)
-    markdown/             — Intermediate Markdown files (one per PDF)
+    faiss_index.bin       — FAISS IndexFlatIP (typically tens of MB; size depends on corpus)
+    embeddings.npy        — All chunk vectors (size depends on number of chunks and embedding dim)
+    chunks_metadata.json  — Chunk text + metadata (country, year, doc_type, …; scales with corpus)
+    markdown/             — Intermediate Markdown files (one per PDF; size depends on source PDFs)
 """
 
 import argparse
@@ -22,10 +22,16 @@ import re
 import sys
 
 
-# Prevent tokenizer/PyTorch multiprocessing segfault on macOS
+# Prevent tokenizer parallelism warnings/segfaults (safe default everywhere)
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
-os.environ.setdefault("OMP_NUM_THREADS", "1")
-os.environ.setdefault("MKL_NUM_THREADS", "1")
+
+# Limit MKL/OpenMP threads only on macOS or when explicitly requested.
+# On non-macOS platforms, multi-threading is allowed by default to avoid
+# unnecessary slowdowns during embedding/index builds.
+_limit_threads_flag = os.getenv("CRPD_LIMIT_THREADS", "").lower()
+if sys.platform == "darwin" or _limit_threads_flag in {"1", "true", "yes"}:
+    os.environ.setdefault("OMP_NUM_THREADS", "1")
+    os.environ.setdefault("MKL_NUM_THREADS", "1")
 
 import numpy as np
 
@@ -162,20 +168,32 @@ def _parse_doc_id(filename: str) -> dict:
     Returns:
         dict with keys: country, year, doc_type, symbol.
     """
-    # Normalise underscores and try to extract country + year
+    # Derive country from all tokens before the year token
     parts = filename.split("_")
-    country = parts[0].replace("-", " ") if parts else "Unknown"
-    year_match = re.search(r"(20\d{2}|19\d{2})", filename)
-    year = int(year_match.group(1)) if year_match else None
+    country = "Unknown"
+    year = None
+    if parts:
+        year_token_index = None
+        for idx, part in enumerate(parts):
+            if re.fullmatch(r"(?:19|20)\d{2}", part):
+                year_token_index = idx
+                year = int(part)
+                break
+        if year_token_index is not None and year_token_index > 0:
+            country = " ".join(p.replace("-", " ") for p in parts[:year_token_index])
+        else:
+            country = parts[0].replace("-", " ")
+            year_match = re.search(r"(?:19|20)\d{2}", filename)
+            year = int(year_match.group(0)) if year_match else None
 
-    # Infer doc_type from filename keywords
+    # Infer doc_type — check specific CO markers before generic CRPD/C
     fname_lower = filename.lower()
-    if "state" in fname_lower or "_c_" in fname_lower:
-        doc_type = "state report"
+    if re.search(r"[_/]co[_/]", filename, re.IGNORECASE) or "concluding" in fname_lower:
+        doc_type = "concluding observations"
     elif "parallel" in fname_lower or "shadow" in fname_lower or "civil" in fname_lower:
         doc_type = "parallel report"
-    elif "concluding" in fname_lower or "co_" in fname_lower:
-        doc_type = "concluding observations"
+    elif "state" in fname_lower or re.search(r"crpd[_/]c[_/]", filename, re.IGNORECASE):
+        doc_type = "state report"
     else:
         doc_type = "document"
 
