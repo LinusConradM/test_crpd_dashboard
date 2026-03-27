@@ -387,7 +387,8 @@ def get_groq_client():
     """Initialize and return a Groq API client using st.secrets."""
     from groq import Groq  # Lazy import — only needed for Phase 2+
 
-    api_key = st.secrets.get("GROQ_API_KEY")
+    import os
+    api_key = st.secrets.get("GROQ_API_KEY") or os.environ.get("GROQ_API_KEY")
     if not api_key:
         raise ValueError("GROQ_API_KEY not found in .streamlit/secrets.toml")
     return Groq(api_key=api_key)
