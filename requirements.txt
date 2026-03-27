@@ -38,7 +38,7 @@ altair==5.5.0                  # Used in explore tab charts
 # Phase 3 — RAG + Semantic Search (LLM_Development/build_knowledge_base.py + src/llm.py)
 sentence-transformers>=3.0.0   # Local embeddings — all-mpnet-base-v2 (768-dim)
 faiss-cpu==1.13.2              # Vector similarity search — IndexFlatIP
-pymupdf4llm==1.27.2            # PDF → Markdown conversion for knowledge base build
+pymupdf4llm==1.27.2.1            # PDF → Markdown conversion for knowledge base build
 
 # Research briefing export (src/research_export.py)
 fpdf2>=2.7.0                   # PDF export for research briefings
